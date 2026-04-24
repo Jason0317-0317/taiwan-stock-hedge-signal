@@ -11,19 +11,13 @@ from email.mime.multipart import MIMEMultipart
 # 1. 資料下載與清洗
 # =========================================================
 def get_cleaned_data(ticker, mkt_ticker, start):
-    df = yf.download([ticker, mkt_ticker], start=start, auto_adjust=True)
-
-    if isinstance(df.columns, pd.MultiIndex):
-        df.columns = [f"{col[0]}_{col[1]}" for col in df.columns]
-
-    asset_close = df[f"Close_{ticker}"]
-    asset_vol   = df[f"Volume_{ticker}"]
-    mkt_close   = df[f"Close_{mkt_ticker}"]
+    df_asset = yf.download(ticker, start=start, auto_adjust=True)
+    df_mkt   = yf.download(mkt_ticker, start=start, auto_adjust=True)
 
     df_w = pd.DataFrame({
-        'Close':     asset_close.resample('W-FRI').last(),
-        'Volume':    asset_vol.resample('W-FRI').sum(),
-        'Mkt_Close': mkt_close.resample('W-FRI').last()
+        'Close':     df_asset['Close'].resample('W-FRI').last(),
+        'Volume':    df_asset['Volume'].resample('W-FRI').sum(),
+        'Mkt_Close': df_mkt['Close'].resample('W-FRI').last()
     }).dropna()
 
     return df_w
