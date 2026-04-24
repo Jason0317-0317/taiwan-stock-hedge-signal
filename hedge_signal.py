@@ -198,11 +198,12 @@ html = f"""<!DOCTYPE html>
 
   <div class="section">
     <div class="section-title">風險機率儀表</div>
-    <div class="gauge-track">
-      <div class="gauge-fill" style="width:{min(latest_prob*100, 100):.1f}%; background:{gauge_color};">
-        <span>{latest_prob:.1%}</span>
+    <div style="display:flex; align-items:center; gap:12px; margin: 8px 0 4px;">
+      <div class="gauge-track" style="flex:1; margin:0; position:relative;">
+        <div class="gauge-fill" style="width:{min(latest_prob*100, 100):.1f}%; background:{gauge_color}; height:22px; border-radius:6px;"></div>
+        <div class="gauge-marker" style="left:{threshold*100:.1f}%;"></div>
       </div>
-      <div class="gauge-marker" style="left:{threshold*100:.1f}%;"></div>
+      <div style="font-size:15px; font-weight:bold; color:{prob_color}; white-space:nowrap; min-width:48px;">{latest_prob:.1%}</div>
     </div>
     <div class="gauge-marker-label" style="padding-left:calc({threshold*100:.1f}% - 16px);">門檻 {threshold:.1%}</div>
   </div>
