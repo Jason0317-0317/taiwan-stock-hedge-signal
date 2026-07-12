@@ -1,0 +1,24 @@
+{
+  "title": "台股尾部風險對沖通報",
+  "latestDate": "尚未產生",
+  "model": "XGBoost Tail Risk Model",
+  "market": "^TWII",
+  "stockCount": 10,
+  "hedgeCount": 0,
+  "stocks": [
+    {
+      "ticker": "2330.TW",
+      "name": "台積電",
+      "latestDate": "尚未產生",
+      "riskProbability": 0,
+      "probabilityThreshold": 0,
+      "downsideThreshold": 0,
+      "downsideThresholdText": "尚未產生",
+      "weeklyReturn": 0,
+      "signal": false,
+      "action": "等待資料",
+      "history": []
+    }
+  ],
+  "disclaimer": "此報告由 XGBoost 模型自動生成，僅供研究與風險控管參考，不構成投資建議。"
+}
