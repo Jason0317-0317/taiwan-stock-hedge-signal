@@ -8,15 +8,24 @@
 - 以週頻率建立特徵，例如波動率、均線乖離、動能、成交量變化與近期低點距離
 - 使用 XGBoost 分類模型預測尾部下跌風險
 - Streamlit 互動介面顯示模型指標與回測績效
+- Node.js 網站儀表板顯示每週風險訊號
 - 每週自動產生多檔股票風險訊號並寄出 email 報告
-- Email 報告會顯示每支股票的「尾部跌幅門檻」，也就是該股票週報酬跌超過多少會被模型視為尾部風險事件
+- Email 報告與網站儀表板都會顯示每支股票的「尾部跌幅門檻」，也就是該股票週報酬跌超過多少會被模型視為尾部風險事件
 
 ## 主要檔案
 
 ```text
 taiwan-stock-hedge-signal/
 ├── app.py                         # Streamlit 互動分析介面
-├── hedge_signal.py                # 每週風險訊號與 email 報告腳本
+├── hedge_signal.py                # 每週風險訊號、email 報告與網站資料輸出腳本
+├── package.json                   # Node.js 網站依賴與啟動指令
+├── server.js                      # Express 網站伺服器
+├── vercel.json                    # Vercel 部署設定
+├── public/
+│   ├── index.html                 # 網站頁面
+│   ├── styles.css                 # 網站樣式
+│   ├── app.js                     # 網站資料渲染邏輯
+│   └── report-data.json           # 週報資料，由 hedge_signal.py 更新
 ├── requirements.txt               # Python 依賴
 └── .github/workflows/weekly_signal.yml
 ```
@@ -45,7 +54,7 @@ taiwan-stock-hedge-signal/
 - 尾部跌幅門檻：訓練期間每檔股票「最差 10% 週報酬」的分界。例如顯示「跌超過 5.3%」，代表該股票單週跌幅超過約 5.3% 會被模型視為尾部風險事件。
 - 建議行動：風險機率高於機率門檻時顯示「建議對沖」，否則為「正常持有」。
 
-## 安裝
+## 安裝 Python 依賴
 
 ```bash
 pip install -r requirements.txt
@@ -63,9 +72,46 @@ streamlit run app.py
 python hedge_signal.py
 ```
 
+執行後會產生或更新：
+
+- `public/report-data.json`：Node.js 網站使用的週報資料
+- `report.html`：未設定寄信環境變數時產生的 email 預覽檔
+
+## 執行 Node.js 網站
+
+```bash
+npm install
+npm start
+```
+
+預設會在本機啟動：
+
+```text
+http://localhost:3000
+```
+
+網站會透過 `/api/report` 讀取 `public/report-data.json`，並顯示 10 檔股票的風險卡片、風險機率、尾部跌幅門檻、上週報酬與近期訊號。
+
+## 部署到 Vercel
+
+此專案已包含 `vercel.json`，可以直接把 GitHub repo 匯入 Vercel：
+
+- Framework Preset：Other
+- Build Command：留空或使用 Vercel 預設
+- Output Directory：留空
+- Install Command：`npm install`
+- Start Command：`npm start`
+
+每週 GitHub Actions 執行 `hedge_signal.py` 後，會更新並提交 `public/report-data.json`。如果 Vercel 已連接此 repo，新的資料提交會觸發網站重新部署。
+
 ## GitHub Actions 自動週報
 
-`.github/workflows/weekly_signal.yml` 會在台灣時間每週日 08:00 執行，也可以手動觸發。
+`.github/workflows/weekly_signal.yml` 會在台灣時間每週日 08:00 執行，也可以手動觸發。流程會：
+
+- 產生 10 檔股票風險訊號
+- 寄出 Email 週報
+- 更新 `public/report-data.json`
+- 將最新網站資料提交回 repo
 
 需要設定以下 GitHub Secrets：
 
