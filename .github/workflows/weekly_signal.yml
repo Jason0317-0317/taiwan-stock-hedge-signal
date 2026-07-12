@@ -5,25 +5,40 @@ on:
     - cron: '0 0 * * 0'  # UTC 00:00 = 台灣時間週日 08:00
   workflow_dispatch:       # 也可以手動觸發
 
+permissions:
+  contents: write
+
 jobs:
   send-signal:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: pip install yfinance pandas numpy xgboost scikit-learn
 
-      - name: Run signal and send email
+      - name: Run signal, send email, and export dashboard data
         env:
           SENDER_EMAIL:    ${{ secrets.SENDER_EMAIL }}
           SENDER_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
           RECEIVER_EMAIL:  ${{ secrets.RECEIVER_EMAIL }}
         run: python hedge_signal.py
+
+      - name: Commit dashboard data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/report-data.json
+          if git diff --cached --quiet; then
+            echo "No dashboard data changes to commit."
+          else
+            git commit -m "Update weekly dashboard data"
+            git push
+          fi
