@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>台股尾部風險對沖通報</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="topbar" aria-label="報告摘要">
+      <div>
+        <p class="eyebrow">XGBoost Tail Risk Model</p>
+        <h1>台股尾部風險對沖通報</h1>
+      </div>
+      <div class="stamp">
+        <span>資料週次</span>
+        <strong id="latest-date">載入中</strong>
+      </div>
+    </section>
+
+    <section class="summary-grid" aria-label="整體統計">
+      <article class="stat-panel">
+        <span>監控股票</span>
+        <strong id="stock-count">-</strong>
+      </article>
+      <article class="stat-panel warn">
+        <span>建議對沖</span>
+        <strong id="hedge-count">-</strong>
+      </article>
+      <article class="stat-panel">
+        <span>市場基準</span>
+        <strong id="market-code">-</strong>
+      </article>
+    </section>
+
+    <section class="toolbar" aria-label="排序與篩選">
+      <div class="tabs" role="tablist" aria-label="訊號篩選">
+        <button class="tab active" data-filter="all" type="button">全部</button>
+        <button class="tab" data-filter="hedge" type="button">建議對沖</button>
+        <button class="tab" data-filter="hold" type="button">正常持有</button>
+      </div>
+      <label class="search-box">
+        <span>搜尋</span>
+        <input id="stock-search" type="search" placeholder="代號或名稱">
+      </label>
+    </section>
+
+    <section id="stock-grid" class="stock-grid" aria-live="polite"></section>
+
+    <section class="table-panel" aria-label="全體股票摘要表">
+      <div class="panel-title">
+        <h2>全體股票摘要</h2>
+        <span id="table-count">0 檔</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>股票</th>
+              <th>風險機率</th>
+              <th>機率門檻</th>
+              <th>尾部跌幅門檻</th>
+              <th>上週報酬</th>
+              <th>建議行動</th>
+            </tr>
+          </thead>
+          <tbody id="summary-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <p id="disclaimer" class="disclaimer"></p>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
