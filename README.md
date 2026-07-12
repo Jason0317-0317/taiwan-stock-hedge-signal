@@ -23,8 +23,9 @@ taiwan-stock-hedge-signal/
 
 ## Email 週報監控股票
 
-`hedge_signal.py` 目前預設寄信監控以下台股：
+`hedge_signal.py` 目前預設寄信監控以下 10 檔台股：
 
+- 2330.TW 台積電
 - 2454.TW 聯發科
 - 2317.TW 鴻海
 - 3711.TW 日月光
