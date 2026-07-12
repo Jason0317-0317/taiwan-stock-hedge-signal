@@ -1,0 +1,16 @@
+{
+  "name": "taiwan-stock-hedge-signal-dashboard",
+  "version": "1.0.0",
+  "description": "Node.js dashboard for Taiwan stock tail-risk hedge signals.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
