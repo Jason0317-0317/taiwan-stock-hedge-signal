@@ -1,9 +1,11 @@
+import json
 import yfinance as yf
 import pandas as pd
 import numpy as np
 import xgboost as xgb
 import smtplib
 import os
+from pathlib import Path
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -135,6 +137,9 @@ def format_downside_threshold(value):
         return f"跌超過 {abs(value):.1%}"
     return f"低於 {value:.1%}"
 
+def pct_value(value):
+    return round(float(value), 6)
+
 # =========================================================
 # 4. 主程式
 # =========================================================
@@ -166,6 +171,7 @@ if not results:
 
 all_sections = ""
 summary_rows = ""
+report_items = []
 
 for res in results:
     ticker = res["ticker"]
@@ -196,6 +202,7 @@ for res in results:
     """
 
     history_rows = ""
+    history_items = []
     for i in range(len(history_df) - 1, -1, -1):
         d_str = history_df.index[i].strftime("%Y-%m-%d")
         p = history_proba[i]
@@ -206,6 +213,27 @@ for res in results:
         r_s = "+" if r >= 0 else ""
         b = '<span class="badge hedge">對沖</span>' if s else '<span class="badge hold">持有</span>'
         history_rows += f"<tr><td>{d_str}</td><td style='color:{p_c};'>{p:.1%}</td><td style='color:{r_c};'>{r_s}{r:.1%}</td><td>{b}</td></tr>"
+        history_items.append({
+            "date": d_str,
+            "riskProbability": pct_value(p),
+            "weeklyReturn": pct_value(r),
+            "signal": bool(s),
+            "action": "對沖" if s else "持有",
+        })
+
+    report_items.append({
+        "ticker": ticker,
+        "name": name,
+        "latestDate": latest_date.strftime("%Y-%m-%d"),
+        "riskProbability": pct_value(latest_prob),
+        "probabilityThreshold": pct_value(probability_threshold),
+        "downsideThreshold": pct_value(downside_threshold),
+        "downsideThresholdText": threshold_text,
+        "weeklyReturn": pct_value(latest_ret),
+        "signal": bool(signal),
+        "action": alert_title,
+        "history": history_items,
+    })
 
     all_sections += f"""
     <div class="section" id="section-{ticker}">
@@ -235,6 +263,24 @@ for res in results:
       </table>
     </div>
     """
+
+hedge_count = sum(1 for r in results if r["signal"])
+report_data = {
+    "title": "台股尾部風險對沖通報",
+    "latestDate": results[0]["latest_date"].strftime("%Y-%m-%d"),
+    "model": "XGBoost Tail Risk Model",
+    "market": MARKET,
+    "stockCount": len(report_items),
+    "hedgeCount": hedge_count,
+    "stocks": report_items,
+    "disclaimer": "此報告由 XGBoost 模型自動生成，僅供研究與風險控管參考，不構成投資建議。",
+}
+
+public_dir = Path("public")
+public_dir.mkdir(exist_ok=True)
+with open(public_dir / "report-data.json", "w", encoding="utf-8") as f:
+    json.dump(report_data, f, ensure_ascii=False, indent=2)
+print("網站資料已儲存至 public/report-data.json")
 
 html = f"""<!DOCTYPE html>
 <html>
@@ -299,7 +345,6 @@ try:
     password = os.environ["SENDER_PASSWORD"]
     receiver = os.environ["RECEIVER_EMAIL"]
 
-    hedge_count = sum(1 for r in results if r["signal"])
     subject = f"【風險對沖週報】{len(results)}檔監控中，{hedge_count}檔建議對沖 ({results[0]['latest_date'].strftime('%Y-%m-%d')})"
 
     msg = MIMEMultipart("alternative")
