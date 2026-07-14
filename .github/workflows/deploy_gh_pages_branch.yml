@@ -1,0 +1,75 @@
+name: Publish Dashboard to gh-pages Branch
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - public/**
+      - .github/workflows/deploy_gh_pages_branch.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: gh-pages-branch
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Publish public directory to gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tmp_dir="$(mktemp -d)"
+          cp -R public/. "$tmp_dir/"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin gh-pages || true
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git switch --track origin/gh-pages
+          else
+            git switch --orphan gh-pages
+          fi
+
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -R "$tmp_dir/." .
+          touch .nojekyll
+
+          git add .
+          if git diff --cached --quiet; then
+            echo "No dashboard changes to publish."
+          else
+            git commit -m "Publish dashboard to gh-pages"
+            git push origin gh-pages
+          fi
+
+      - name: Point GitHub Pages at gh-pages branch
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const source = { branch: 'gh-pages', path: '/' };
+
+            try {
+              await github.request('POST /repos/{owner}/{repo}/pages', { owner, repo, source });
+              core.info('Created GitHub Pages site using gh-pages branch source.');
+            } catch (error) {
+              if (![409, 422].includes(error.status)) throw error;
+              core.info('GitHub Pages site already exists; updating branch source.');
+              await github.request('PUT /repos/{owner}/{repo}/pages', { owner, repo, source });
+            }
