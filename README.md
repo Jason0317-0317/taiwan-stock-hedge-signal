@@ -11,6 +11,7 @@
 - Node.js 網站儀表板顯示每週風險訊號
 - 網站儀表板提供風險機率排行、訊號分布、風險/報酬散點圖與近 6 週風險趨勢圖
 - 網站儀表板支援手機版瀏覽，手機上會改用單欄卡片、精簡圖表與卡片式摘要表
+- GitHub Pages 可部署手機也能開啟的公開網址
 - 每週自動產生多檔股票風險訊號並寄出 email 報告
 - Email 報告與網站儀表板都會顯示每支股票的「尾部跌幅門檻」，也就是該股票週報酬跌超過多少會被模型視為尾部風險事件
 
@@ -27,9 +28,12 @@ taiwan-stock-hedge-signal/
 │   ├── index.html                 # 網站頁面與圖表區塊
 │   ├── styles.css                 # 網站樣式、手機版與響應式圖表排版
 │   ├── app.js                     # 網站資料渲染與 Chart.js 圖表邏輯
-│   └── report-data.json           # 週報資料，由 hedge_signal.py 更新
+│   ├── report-data.json           # 週報資料，由 hedge_signal.py 更新
+│   └── .nojekyll                  # GitHub Pages 靜態檔設定
 ├── requirements.txt               # Python 依賴
-└── .github/workflows/weekly_signal.yml
+└── .github/workflows/
+    ├── weekly_signal.yml          # 每週產生訊號與更新資料
+    └── deploy_pages.yml           # 部署 public/ 到 GitHub Pages
 ```
 
 ## Email 週報監控股票
@@ -87,7 +91,7 @@ python hedge_signal.py
 
 執行後會產生或更新：
 
-- `public/report-data.json`：Node.js 網站使用的週報資料
+- `public/report-data.json`：網站使用的週報資料
 - `report.html`：未設定寄信環境變數時產生的 email 預覽檔
 
 ## 執行 Node.js 網站
@@ -103,11 +107,21 @@ npm start
 http://localhost:3000
 ```
 
-網站會透過 `/api/report` 讀取 `public/report-data.json`，並顯示 10 檔股票的風險卡片、風險機率、尾部跌幅門檻、上週報酬、近期訊號與互動圖表。
+網站會透過 `/api/report` 讀取 `public/report-data.json`；部署到 GitHub Pages 時，會自動改讀靜態的 `report-data.json`。
+
+## 部署到 GitHub Pages
+
+`.github/workflows/deploy_pages.yml` 會在 `public/` 有更新時，把儀表板部署到 GitHub Pages。公開網址預期為：
+
+```text
+https://jason0317-0317.github.io/taiwan-stock-hedge-signal/
+```
+
+如果 GitHub 第一次啟用 Pages，請到 repo 的 Settings → Pages 確認 Source 使用 GitHub Actions。
 
 ## 部署到 Vercel
 
-此專案已包含 `vercel.json`，可以直接把 GitHub repo 匯入 Vercel：
+此專案也包含 `vercel.json`，可以直接把 GitHub repo 匯入 Vercel：
 
 - Framework Preset：Other
 - Build Command：留空或使用 Vercel 預設
