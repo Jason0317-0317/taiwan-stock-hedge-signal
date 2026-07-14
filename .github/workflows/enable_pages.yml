@@ -23,39 +23,25 @@ jobs:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            core.info('Initializing GitHub Pages for dashboard deployment.');
+            const source = { branch: 'gh-pages', path: '/' };
+            core.info('Initializing GitHub Pages using gh-pages branch source.');
 
             try {
-              await github.request('GET /repos/{owner}/{repo}/pages', { owner, repo });
-              core.info('GitHub Pages site already exists.');
+              await github.request('POST /repos/{owner}/{repo}/pages', { owner, repo, source });
+              core.info('GitHub Pages site created with gh-pages branch source.');
             } catch (error) {
-              if (error.status !== 404) throw error;
-              core.info('GitHub Pages site does not exist. Creating it with workflow build type.');
-              await github.request('POST /repos/{owner}/{repo}/pages', {
-                owner,
-                repo,
-                build_type: 'workflow'
-              });
+              if (![409, 422].includes(error.status)) throw error;
+              core.info('GitHub Pages site already exists; updating source to gh-pages branch.');
+              await github.request('PUT /repos/{owner}/{repo}/pages', { owner, repo, source });
             }
 
-            try {
-              await github.request('PUT /repos/{owner}/{repo}/pages', {
-                owner,
-                repo,
-                build_type: 'workflow'
-              });
-              core.info('GitHub Pages source set to GitHub Actions workflow.');
-            } catch (error) {
-              core.warning(`Could not update Pages build type: ${error.message}`);
-            }
-
-      - name: Trigger dashboard deployment
+      - name: Trigger branch dashboard deployment
         uses: actions/github-script@v7
         with:
           script: |
             await github.request('POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches', {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              workflow_id: 'deploy_pages.yml',
+              workflow_id: 'deploy_gh_pages_branch.yml',
               ref: 'main'
             });
