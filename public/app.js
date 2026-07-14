@@ -66,29 +66,32 @@ const destroyChart = (key) => {
   }
 };
 
+const isSmallViewport = () => window.matchMedia('(max-width: 560px)').matches;
+
 const renderRiskRankingChart = (stocks) => {
   destroyChart('riskRanking');
   const ctx = document.getElementById('risk-ranking-chart');
   const sorted = [...stocks].sort((a, b) => b.riskProbability - a.riskProbability);
+  const small = isSmallViewport();
 
   state.charts.riskRanking = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: sorted.map((stock) => `${stock.name} ${stock.ticker}`),
+      labels: sorted.map((stock) => small ? stock.name : `${stock.name} ${stock.ticker}`),
       datasets: [
         {
           label: '風險機率',
           data: sorted.map((stock) => stock.riskProbability * 100),
           backgroundColor: sorted.map((stock) => stock.signal ? palette.red : palette.blue),
           borderRadius: 6,
-          barThickness: 18
+          barThickness: small ? 14 : 18
         },
         {
           label: '機率門檻',
           data: sorted.map((stock) => stock.probabilityThreshold * 100),
           backgroundColor: 'rgba(153, 101, 21, 0.34)',
           borderRadius: 6,
-          barThickness: 18
+          barThickness: small ? 14 : 18
         }
       ]
     },
@@ -100,11 +103,12 @@ const renderRiskRankingChart = (stocks) => {
         x: {
           beginAtZero: true,
           grid: { color: 'rgba(216, 224, 230, 0.8)' },
-          ticks: { callback: (value) => `${value}%` }
+          ticks: { callback: (value) => `${value}%`, maxTicksLimit: small ? 4 : 8 }
         },
-        y: { grid: { display: false } }
+        y: { grid: { display: false }, ticks: { font: { size: small ? 11 : 12 } } }
       },
       plugins: {
+        legend: { position: small ? 'bottom' : 'top' },
         tooltip: {
           callbacks: {
             label: (context) => `${context.dataset.label}: ${context.parsed.x.toFixed(1)}%`
@@ -138,6 +142,7 @@ const renderSignalDonutChart = (stocks) => {
       maintainAspectRatio: false,
       cutout: '62%',
       plugins: {
+        legend: { position: 'bottom' },
         tooltip: {
           callbacks: {
             label: (context) => `${context.label}: ${context.parsed} 檔`
@@ -151,6 +156,7 @@ const renderSignalDonutChart = (stocks) => {
 const renderRiskReturnChart = (stocks) => {
   destroyChart('riskReturn');
   const ctx = document.getElementById('risk-return-chart');
+  const small = isSmallViewport();
 
   state.charts.riskReturn = new Chart(ctx, {
     type: 'scatter',
@@ -164,7 +170,7 @@ const renderRiskReturnChart = (stocks) => {
             stock
           })),
           backgroundColor: palette.green,
-          pointRadius: 6,
+          pointRadius: small ? 5 : 6,
           pointHoverRadius: 8
         },
         {
@@ -175,7 +181,7 @@ const renderRiskReturnChart = (stocks) => {
             stock
           })),
           backgroundColor: palette.red,
-          pointRadius: 7,
+          pointRadius: small ? 6 : 7,
           pointHoverRadius: 9
         }
       ]
@@ -185,18 +191,19 @@ const renderRiskReturnChart = (stocks) => {
       maintainAspectRatio: false,
       scales: {
         x: {
-          title: { display: true, text: '上週報酬' },
+          title: { display: !small, text: '上週報酬' },
           grid: { color: 'rgba(216, 224, 230, 0.8)' },
-          ticks: { callback: (value) => `${value}%` }
+          ticks: { callback: (value) => `${value}%`, maxTicksLimit: small ? 5 : 8 }
         },
         y: {
           beginAtZero: true,
-          title: { display: true, text: '風險機率' },
+          title: { display: !small, text: '風險機率' },
           grid: { color: 'rgba(216, 224, 230, 0.8)' },
-          ticks: { callback: (value) => `${value}%` }
+          ticks: { callback: (value) => `${value}%`, maxTicksLimit: small ? 5 : 8 }
         }
       },
       plugins: {
+        legend: { position: 'bottom' },
         tooltip: {
           callbacks: {
             title: (items) => {
@@ -218,9 +225,10 @@ const renderRiskReturnChart = (stocks) => {
 const renderTrendChart = (stocks) => {
   destroyChart('trend');
   const ctx = document.getElementById('trend-chart');
+  const small = isSmallViewport();
   const selected = [...stocks]
     .sort((a, b) => b.riskProbability - a.riskProbability)
-    .slice(0, 5);
+    .slice(0, small ? 3 : 5);
   const labels = selected[0]?.history?.slice().reverse().map((item) => item.date.slice(5)) || [];
   const colors = [palette.red, palette.blue, palette.green, palette.amber, palette.steel];
 
@@ -229,13 +237,13 @@ const renderTrendChart = (stocks) => {
     data: {
       labels,
       datasets: selected.map((stock, index) => ({
-        label: `${stock.name} ${stock.ticker}`,
+        label: small ? stock.name : `${stock.name} ${stock.ticker}`,
         data: (stock.history || []).slice().reverse().map((item) => item.riskProbability * 100),
         borderColor: colors[index % colors.length],
         backgroundColor: colors[index % colors.length],
         borderWidth: 2,
         tension: 0.28,
-        pointRadius: 3,
+        pointRadius: small ? 2 : 3,
         pointHoverRadius: 6
       }))
     },
@@ -247,10 +255,11 @@ const renderTrendChart = (stocks) => {
         y: {
           beginAtZero: true,
           grid: { color: 'rgba(216, 224, 230, 0.8)' },
-          ticks: { callback: (value) => `${value}%` }
+          ticks: { callback: (value) => `${value}%`, maxTicksLimit: small ? 5 : 8 }
         }
       },
       plugins: {
+        legend: { position: 'bottom' },
         tooltip: {
           callbacks: {
             label: (context) => `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`
@@ -331,12 +340,12 @@ const renderTable = (stocks) => {
   document.getElementById('table-count').textContent = `${stocks.length} 檔`;
   document.getElementById('summary-body').innerHTML = stocks.map((stock) => `
     <tr>
-      <td>${stock.ticker}<br><span class="muted">${stock.name}</span></td>
-      <td class="${stock.signal ? 'danger' : ''}">${formatPercent(stock.riskProbability)}</td>
-      <td>${formatPercent(stock.probabilityThreshold)}</td>
-      <td class="danger">${stock.downsideThresholdText}</td>
-      <td class="${stock.weeklyReturn >= 0 ? 'positive' : 'negative'}">${formatPercent(stock.weeklyReturn, { sign: true })}</td>
-      <td><span class="badge ${stock.signal ? 'hedge' : 'hold'}">${stock.action}</span></td>
+      <td data-label="股票">${stock.ticker}<br><span class="muted">${stock.name}</span></td>
+      <td data-label="風險機率" class="${stock.signal ? 'danger' : ''}">${formatPercent(stock.riskProbability)}</td>
+      <td data-label="機率門檻">${formatPercent(stock.probabilityThreshold)}</td>
+      <td data-label="尾部跌幅門檻" class="danger">${stock.downsideThresholdText}</td>
+      <td data-label="上週報酬" class="${stock.weeklyReturn >= 0 ? 'positive' : 'negative'}">${formatPercent(stock.weeklyReturn, { sign: true })}</td>
+      <td data-label="建議行動"><span class="badge ${stock.signal ? 'hedge' : 'hold'}">${stock.action}</span></td>
     </tr>
   `).join('');
 };
@@ -361,6 +370,11 @@ const bindEvents = () => {
   document.getElementById('stock-search').addEventListener('input', (event) => {
     state.search = event.target.value;
     render();
+  });
+
+  window.addEventListener('resize', () => {
+    clearTimeout(state.resizeTimer);
+    state.resizeTimer = setTimeout(render, 150);
   });
 };
 
