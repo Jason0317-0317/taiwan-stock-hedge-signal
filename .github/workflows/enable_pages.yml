@@ -23,6 +23,7 @@ jobs:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
+            core.info('Initializing GitHub Pages for dashboard deployment.');
 
             try {
               await github.request('GET /repos/{owner}/{repo}/pages', { owner, repo });
