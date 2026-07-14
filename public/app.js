@@ -1,7 +1,19 @@
 const state = {
   data: null,
   filter: 'all',
-  search: ''
+  search: '',
+  charts: {}
+};
+
+const palette = {
+  ink: '#172026',
+  muted: '#687783',
+  line: '#d8e0e6',
+  green: '#15855f',
+  red: '#b3261e',
+  amber: '#996515',
+  blue: '#166c8c',
+  steel: '#24323d'
 };
 
 const formatPercent = (value, options = {}) => {
@@ -35,6 +47,226 @@ const renderHeader = () => {
   document.getElementById('hedge-count').textContent = state.data.hedgeCount;
   document.getElementById('market-code').textContent = state.data.market;
   document.getElementById('disclaimer').textContent = state.data.disclaimer;
+};
+
+const chartDefaults = () => {
+  if (!window.Chart) return;
+  Chart.defaults.font.family = 'Noto Sans TC, system-ui, sans-serif';
+  Chart.defaults.color = palette.muted;
+  Chart.defaults.plugins.legend.labels.usePointStyle = true;
+  Chart.defaults.plugins.tooltip.backgroundColor = palette.steel;
+  Chart.defaults.plugins.tooltip.padding = 12;
+  Chart.defaults.plugins.tooltip.cornerRadius = 6;
+};
+
+const destroyChart = (key) => {
+  if (state.charts[key]) {
+    state.charts[key].destroy();
+    state.charts[key] = null;
+  }
+};
+
+const renderRiskRankingChart = (stocks) => {
+  destroyChart('riskRanking');
+  const ctx = document.getElementById('risk-ranking-chart');
+  const sorted = [...stocks].sort((a, b) => b.riskProbability - a.riskProbability);
+
+  state.charts.riskRanking = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: sorted.map((stock) => `${stock.name} ${stock.ticker}`),
+      datasets: [
+        {
+          label: '風險機率',
+          data: sorted.map((stock) => stock.riskProbability * 100),
+          backgroundColor: sorted.map((stock) => stock.signal ? palette.red : palette.blue),
+          borderRadius: 6,
+          barThickness: 18
+        },
+        {
+          label: '機率門檻',
+          data: sorted.map((stock) => stock.probabilityThreshold * 100),
+          backgroundColor: 'rgba(153, 101, 21, 0.34)',
+          borderRadius: 6,
+          barThickness: 18
+        }
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: { color: 'rgba(216, 224, 230, 0.8)' },
+          ticks: { callback: (value) => `${value}%` }
+        },
+        y: { grid: { display: false } }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (context) => `${context.dataset.label}: ${context.parsed.x.toFixed(1)}%`
+          }
+        }
+      }
+    }
+  });
+};
+
+const renderSignalDonutChart = (stocks) => {
+  destroyChart('signalDonut');
+  const ctx = document.getElementById('signal-donut-chart');
+  const hedge = stocks.filter((stock) => stock.signal).length;
+  const hold = stocks.length - hedge;
+
+  state.charts.signalDonut = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['建議對沖', '正常持有'],
+      datasets: [{
+        data: [hedge, hold],
+        backgroundColor: [palette.red, palette.green],
+        borderColor: '#ffffff',
+        borderWidth: 4,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (context) => `${context.label}: ${context.parsed} 檔`
+          }
+        }
+      }
+    }
+  });
+};
+
+const renderRiskReturnChart = (stocks) => {
+  destroyChart('riskReturn');
+  const ctx = document.getElementById('risk-return-chart');
+
+  state.charts.riskReturn = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: '正常持有',
+          data: stocks.filter((stock) => !stock.signal).map((stock) => ({
+            x: stock.weeklyReturn * 100,
+            y: stock.riskProbability * 100,
+            stock
+          })),
+          backgroundColor: palette.green,
+          pointRadius: 6,
+          pointHoverRadius: 8
+        },
+        {
+          label: '建議對沖',
+          data: stocks.filter((stock) => stock.signal).map((stock) => ({
+            x: stock.weeklyReturn * 100,
+            y: stock.riskProbability * 100,
+            stock
+          })),
+          backgroundColor: palette.red,
+          pointRadius: 7,
+          pointHoverRadius: 9
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          title: { display: true, text: '上週報酬' },
+          grid: { color: 'rgba(216, 224, 230, 0.8)' },
+          ticks: { callback: (value) => `${value}%` }
+        },
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: '風險機率' },
+          grid: { color: 'rgba(216, 224, 230, 0.8)' },
+          ticks: { callback: (value) => `${value}%` }
+        }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              const stock = items[0].raw.stock;
+              return `${stock.name} ${stock.ticker}`;
+            },
+            label: (context) => [
+              `風險機率: ${context.raw.y.toFixed(1)}%`,
+              `上週報酬: ${context.raw.x.toFixed(1)}%`,
+              `建議行動: ${context.raw.stock.action}`
+            ]
+          }
+        }
+      }
+    }
+  });
+};
+
+const renderTrendChart = (stocks) => {
+  destroyChart('trend');
+  const ctx = document.getElementById('trend-chart');
+  const selected = [...stocks]
+    .sort((a, b) => b.riskProbability - a.riskProbability)
+    .slice(0, 5);
+  const labels = selected[0]?.history?.slice().reverse().map((item) => item.date.slice(5)) || [];
+  const colors = [palette.red, palette.blue, palette.green, palette.amber, palette.steel];
+
+  state.charts.trend = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: selected.map((stock, index) => ({
+        label: `${stock.name} ${stock.ticker}`,
+        data: (stock.history || []).slice().reverse().map((item) => item.riskProbability * 100),
+        borderColor: colors[index % colors.length],
+        backgroundColor: colors[index % colors.length],
+        borderWidth: 2,
+        tension: 0.28,
+        pointRadius: 3,
+        pointHoverRadius: 6
+      }))
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { grid: { display: false } },
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(216, 224, 230, 0.8)' },
+          ticks: { callback: (value) => `${value}%` }
+        }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (context) => `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`
+          }
+        }
+      }
+    }
+  });
+};
+
+const renderCharts = (stocks) => {
+  if (!window.Chart) return;
+  renderRiskRankingChart(stocks);
+  renderSignalDonutChart(stocks);
+  renderRiskReturnChart(stocks);
+  renderTrendChart(stocks);
 };
 
 const renderCards = (stocks) => {
@@ -111,6 +343,7 @@ const renderTable = (stocks) => {
 
 const render = () => {
   const stocks = visibleStocks();
+  renderCharts(stocks);
   renderCards(stocks);
   renderTable(stocks);
 };
@@ -138,6 +371,7 @@ fetch('/api/report')
   })
   .then((data) => {
     state.data = data;
+    chartDefaults();
     renderHeader();
     bindEvents();
     render();
