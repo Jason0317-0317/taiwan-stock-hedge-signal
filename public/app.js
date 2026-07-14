@@ -27,6 +27,21 @@ const clampPercent = (value) => {
   return Math.max(0, Math.min(100, value * 100));
 };
 
+const loadReportData = async () => {
+  const candidates = ['api/report', 'report-data.json'];
+  let lastError;
+  for (const url of candidates) {
+    try {
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`${url} returned ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error('Report data is not available');
+};
+
 const visibleStocks = () => {
   if (!state.data) return [];
   const q = state.search.trim().toLowerCase();
@@ -378,11 +393,7 @@ const bindEvents = () => {
   });
 };
 
-fetch('/api/report')
-  .then((response) => {
-    if (!response.ok) throw new Error('Report data is not available');
-    return response.json();
-  })
+loadReportData()
   .then((data) => {
     state.data = data;
     chartDefaults();
