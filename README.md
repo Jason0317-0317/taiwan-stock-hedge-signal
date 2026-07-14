@@ -21,9 +21,8 @@
 taiwan-stock-hedge-signal/
 ├── app.py                         # Streamlit 互動分析介面
 ├── hedge_signal.py                # 每週風險訊號、email 報告與網站資料輸出腳本
-├── package.json                   # Node.js 網站依賴與啟動指令
-├── server.js                      # Express 網站伺服器
-├── vercel.json                    # Vercel 部署設定
+├── package.json                   # Node.js 本機網站依賴與啟動指令
+├── server.js                      # Express 本機網站伺服器
 ├── public/
 │   ├── index.html                 # 網站頁面與圖表區塊
 │   ├── styles.css                 # 網站樣式、手機版與響應式圖表排版
@@ -111,25 +110,15 @@ http://localhost:3000
 
 ## 部署到 GitHub Pages
 
-`.github/workflows/deploy_pages.yml` 會在 `public/` 有更新時，把儀表板部署到 GitHub Pages。公開網址預期為：
+`.github/workflows/deploy_pages.yml` 會在 `public/` 有更新時，把儀表板部署到 GitHub Pages。
+
+目前公開網址：
 
 ```text
 https://jason0317-0317.github.io/taiwan-stock-hedge-signal/
 ```
 
 如果 GitHub 第一次啟用 Pages，請到 repo 的 Settings → Pages 確認 Source 使用 GitHub Actions。
-
-## 部署到 Vercel
-
-此專案也包含 `vercel.json`，可以直接把 GitHub repo 匯入 Vercel：
-
-- Framework Preset：Other
-- Build Command：留空或使用 Vercel 預設
-- Output Directory：留空
-- Install Command：`npm install`
-- Start Command：`npm start`
-
-每週 GitHub Actions 執行 `hedge_signal.py` 後，會更新並提交 `public/report-data.json`。如果 Vercel 已連接此 repo，新的資料提交會觸發網站重新部署。
 
 ## GitHub Actions 自動週報
 
