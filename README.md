@@ -9,6 +9,7 @@
 - 使用 XGBoost 分類模型預測尾部下跌風險
 - Streamlit 互動介面顯示模型指標與回測績效
 - Node.js 網站儀表板顯示每週風險訊號
+- 網站儀表板提供風險機率排行、訊號分布、風險/報酬散點圖與近 6 週風險趨勢圖
 - 每週自動產生多檔股票風險訊號並寄出 email 報告
 - Email 報告與網站儀表板都會顯示每支股票的「尾部跌幅門檻」，也就是該股票週報酬跌超過多少會被模型視為尾部風險事件
 
@@ -22,9 +23,9 @@ taiwan-stock-hedge-signal/
 ├── server.js                      # Express 網站伺服器
 ├── vercel.json                    # Vercel 部署設定
 ├── public/
-│   ├── index.html                 # 網站頁面
-│   ├── styles.css                 # 網站樣式
-│   ├── app.js                     # 網站資料渲染邏輯
+│   ├── index.html                 # 網站頁面與圖表區塊
+│   ├── styles.css                 # 網站樣式與響應式圖表排版
+│   ├── app.js                     # 網站資料渲染與 Chart.js 圖表邏輯
 │   └── report-data.json           # 週報資料，由 hedge_signal.py 更新
 ├── requirements.txt               # Python 依賴
 └── .github/workflows/weekly_signal.yml
@@ -53,6 +54,17 @@ taiwan-stock-hedge-signal/
 - 機率門檻：模型將風險機率最高的前 10% 視為對沖訊號。
 - 尾部跌幅門檻：訓練期間每檔股票「最差 10% 週報酬」的分界。例如顯示「跌超過 5.3%」，代表該股票單週跌幅超過約 5.3% 會被模型視為尾部風險事件。
 - 建議行動：風險機率高於機率門檻時顯示「建議對沖」，否則為「正常持有」。
+
+## 網站圖表說明
+
+Node.js 儀表板會把 `public/report-data.json` 轉成以下圖表：
+
+- 風險機率排行：比較每檔股票目前風險機率與模型觸發門檻。
+- 訊號分布：統計目前有幾檔建議對沖、幾檔正常持有。
+- 風險與報酬：用散點圖同時觀察上週報酬與風險機率，高風險且負報酬的股票優先檢查。
+- 近 6 週風險趨勢：顯示目前風險較高股票的近期風險機率變化。
+
+上方的「全部 / 建議對沖 / 正常持有」與搜尋框會同步影響圖表、卡片與摘要表。
 
 ## 安裝 Python 依賴
 
@@ -90,7 +102,7 @@ npm start
 http://localhost:3000
 ```
 
-網站會透過 `/api/report` 讀取 `public/report-data.json`，並顯示 10 檔股票的風險卡片、風險機率、尾部跌幅門檻、上週報酬與近期訊號。
+網站會透過 `/api/report` 讀取 `public/report-data.json`，並顯示 10 檔股票的風險卡片、風險機率、尾部跌幅門檻、上週報酬、近期訊號與互動圖表。
 
 ## 部署到 Vercel
 
