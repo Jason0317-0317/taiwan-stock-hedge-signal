@@ -49,6 +49,37 @@
       </label>
     </section>
 
+    <section class="chart-grid" aria-label="可視化輔助判斷">
+      <article class="chart-panel wide">
+        <div class="panel-title compact">
+          <h2>風險機率排行</h2>
+          <span>越接近或超過門檻越需要留意</span>
+        </div>
+        <div class="chart-box"><canvas id="risk-ranking-chart"></canvas></div>
+      </article>
+      <article class="chart-panel">
+        <div class="panel-title compact">
+          <h2>訊號分布</h2>
+          <span>對沖 / 持有</span>
+        </div>
+        <div class="chart-box small"><canvas id="signal-donut-chart"></canvas></div>
+      </article>
+      <article class="chart-panel">
+        <div class="panel-title compact">
+          <h2>風險與報酬</h2>
+          <span>高風險且負報酬優先檢查</span>
+        </div>
+        <div class="chart-box"><canvas id="risk-return-chart"></canvas></div>
+      </article>
+      <article class="chart-panel wide">
+        <div class="panel-title compact">
+          <h2>近 6 週風險趨勢</h2>
+          <span>觀察風險是否連續升溫</span>
+        </div>
+        <div class="chart-box"><canvas id="trend-chart"></canvas></div>
+      </article>
+    </section>
+
     <section id="stock-grid" class="stock-grid" aria-live="polite"></section>
 
     <section class="table-panel" aria-label="全體股票摘要表">
@@ -76,6 +107,7 @@
     <p id="disclaimer" class="disclaimer"></p>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>
