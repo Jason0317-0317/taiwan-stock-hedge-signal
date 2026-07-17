@@ -37,7 +37,7 @@ taiwan-stock-hedge-signal/
 
 ## Email 週報監控股票
 
-`hedge_signal.py` 目前預設寄信監控以下 10 檔台股：
+`hedge_signal.py` 目前預設寄信監控以下 13 檔台股：
 
 - 2330.TW 台積電
 - 2454.TW 聯發科
@@ -49,6 +49,9 @@ taiwan-stock-hedge-signal/
 - 2327.TW 國巨
 - 1303.TW 南亞
 - 2881.TW 富邦金
+- 3037.TW 欣興
+- 2409.TW 友達
+- 3481.TW 群創
 
 > 備註：國巨的 yfinance 台股代號使用 `2327.TW`。
 
@@ -124,7 +127,7 @@ https://jason0317-0317.github.io/taiwan-stock-hedge-signal/
 
 `.github/workflows/weekly_signal.yml` 會在台灣時間每週日 08:00 執行，也可以手動觸發。流程會：
 
-- 產生 10 檔股票風險訊號
+- 產生 13 檔股票風險訊號
 - 寄出 Email 週報
 - 更新 `public/report-data.json`
 - 將最新網站資料提交回 repo
