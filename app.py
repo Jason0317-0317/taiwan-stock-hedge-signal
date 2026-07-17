@@ -113,7 +113,10 @@ TICKERS_MAP = {
     "2327.TW": "國巨",
     "2303.TW": "聯電",
     "2881.TW": "富邦金",
-    "1303.TW": "南亞"
+    "1303.TW": "南亞",
+    "3037.TW": "欣興",
+    "2409.TW": "友達",
+    "3481.TW": "群創"
 }
 
 selected_ticker = st.sidebar.selectbox("選擇股票", list(TICKERS_MAP.keys()), format_func=lambda x: f"{x} {TICKERS_MAP[x]}")
