@@ -32,7 +32,7 @@ taiwan-stock-hedge-signal/
 ├── requirements.txt               # Python 依賴
 └── .github/workflows/
     ├── weekly_signal.yml          # 每週產生訊號與更新資料
-    └── deploy_pages.yml           # 部署 public/ 到 GitHub Pages
+    └── deploy_gh_pages_branch.yml # 部署 public/ 到 gh-pages 分支
 ```
 
 ## Email 週報監控股票
@@ -110,7 +110,7 @@ http://localhost:3000
 
 ## 部署到 GitHub Pages
 
-`.github/workflows/deploy_pages.yml` 會在 `public/` 有更新時，把儀表板部署到 GitHub Pages。
+`.github/workflows/deploy_gh_pages_branch.yml` 會在 `public/` 有更新時，把儀表板發布到 `gh-pages` 分支，並將 GitHub Pages source 指向 `gh-pages` branch。
 
 目前公開網址：
 
@@ -118,7 +118,7 @@ http://localhost:3000
 https://jason0317-0317.github.io/taiwan-stock-hedge-signal/
 ```
 
-如果 GitHub 第一次啟用 Pages，請到 repo 的 Settings → Pages 確認 Source 使用 GitHub Actions。
+如果 GitHub 第一次啟用 Pages，請到 repo 的 Settings → Pages 確認 Source 使用 `gh-pages` branch。
 
 ## GitHub Actions 自動週報
 
