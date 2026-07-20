@@ -140,6 +140,11 @@ def format_downside_threshold(value):
 def pct_value(value):
     return round(float(value), 6)
 
+def format_week_range(end_date):
+    end_date = pd.Timestamp(end_date)
+    start_date = end_date - pd.Timedelta(days=4)
+    return f"{start_date.strftime('%Y-%m-%d')}～{end_date.strftime('%Y-%m-%d')}"
+
 # =========================================================
 # 4. 主程式
 # =========================================================
@@ -185,6 +190,7 @@ for res in results:
     downside_threshold = res["downside_threshold"]
     latest_ret = res["latest_ret"]
     latest_date = res["latest_date"]
+    latest_week_range = format_week_range(latest_date)
     history_df = res["history_df"]
     history_proba = res["history_proba"]
 
@@ -207,7 +213,7 @@ for res in results:
     history_rows = ""
     history_items = []
     for i in range(len(history_df) - 1, -1, -1):
-        d_str = history_df.index[i].strftime("%Y-%m-%d")
+        d_str = format_week_range(history_df.index[i])
         p = history_proba[i]
         r = history_df["Ret"].iloc[i]
         s = p >= probability_threshold
@@ -228,6 +234,7 @@ for res in results:
         "ticker": ticker,
         "name": name,
         "latestDate": latest_date.strftime("%Y-%m-%d"),
+        "latestWeekRange": latest_week_range,
         "riskProbability": pct_value(latest_prob),
         "probabilityThreshold": pct_value(probability_threshold),
         "downsideThreshold": pct_value(downside_threshold),
@@ -271,6 +278,7 @@ hedge_count = sum(1 for r in results if r["signal"])
 report_data = {
     "title": "台股尾部風險對沖通報",
     "latestDate": results[0]["latest_date"].strftime("%Y-%m-%d"),
+    "latestWeekRange": format_week_range(results[0]["latest_date"]),
     "model": "XGBoost Tail Risk Model",
     "market": MARKET,
     "stockCount": len(report_items),
@@ -319,7 +327,7 @@ html = f"""<!DOCTYPE html>
 <div class="container">
   <div class="header">
     <h1>多檔股票風險對沖通報</h1>
-    <p>日期：{results[0]['latest_date'].strftime('%Y-%m-%d')} | XGBOOST TAIL RISK MODEL</p>
+    <p>日期：{format_week_range(results[0]['latest_date'])} | XGBOOST TAIL RISK MODEL</p>
   </div>
 
   <div class="section">
@@ -348,7 +356,7 @@ try:
     password = os.environ["SENDER_PASSWORD"]
     receiver = os.environ["RECEIVER_EMAIL"]
 
-    subject = f"【風險對沖週報】{len(results)}檔監控中，{hedge_count}檔建議對沖 ({results[0]['latest_date'].strftime('%Y-%m-%d')})"
+    subject = f"【風險對沖週報】{len(results)}檔監控中，{hedge_count}檔建議對沖 ({format_week_range(results[0]['latest_date'])})"
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
