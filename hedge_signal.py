@@ -5,6 +5,7 @@ import numpy as np
 import xgboost as xgb
 import smtplib
 import os
+import subprocess
 from pathlib import Path
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -177,8 +178,6 @@ if not results:
     print("沒有任何股票處理成功。")
     exit()
 
-all_sections = ""
-summary_rows = ""
 report_items = []
 
 for res in results:
@@ -190,89 +189,37 @@ for res in results:
     downside_threshold = res["downside_threshold"]
     latest_ret = res["latest_ret"]
     latest_date = res["latest_date"]
-    latest_week_range = format_week_range(latest_date)
     history_df = res["history_df"]
     history_proba = res["history_proba"]
 
-    alert_title = "建議對沖" if signal else "正常持有"
-    prob_color = "#c0392b" if signal else "#27ae60"
-    ret_color = "#c0392b" if latest_ret < 0 else "#27ae60"
-    ret_sign = "+" if latest_ret >= 0 else ""
     threshold_text = format_downside_threshold(downside_threshold)
-
-    summary_rows += f"""
-      <tr>
-        <td><b>{ticker}</b><br><span class="muted">{name}</span></td>
-        <td style="color:{prob_color}; font-weight:bold;">{latest_prob:.1%}</td>
-        <td>{probability_threshold:.1%}</td>
-        <td style="color:#c0392b; font-weight:bold;">{threshold_text}</td>
-        <td><span class="badge {'hedge' if signal else 'hold'}">{alert_title}</span></td>
-      </tr>
-    """
-
-    history_rows = ""
     history_items = []
     for i in range(len(history_df) - 1, -1, -1):
-        d_str = format_week_range(history_df.index[i])
-        p = history_proba[i]
-        r = history_df["Ret"].iloc[i]
-        s = p >= probability_threshold
-        p_c = "#c0392b; font-weight:bold" if s else "#333"
-        r_c = "#c0392b" if r < 0 else "#27ae60"
-        r_s = "+" if r >= 0 else ""
-        b = '<span class="badge hedge">對沖</span>' if s else '<span class="badge hold">持有</span>'
-        history_rows += f"<tr><td>{d_str}</td><td style='color:{p_c};'>{p:.1%}</td><td style='color:{r_c};'>{r_s}{r:.1%}</td><td>{b}</td></tr>"
+        probability = history_proba[i]
+        weekly_return = history_df["Ret"].iloc[i]
+        history_signal = probability >= probability_threshold
         history_items.append({
-            "date": d_str,
-            "riskProbability": pct_value(p),
-            "weeklyReturn": pct_value(r),
-            "signal": bool(s),
-            "action": "對沖" if s else "持有",
+            "date": format_week_range(history_df.index[i]),
+            "riskProbability": pct_value(probability),
+            "weeklyReturn": pct_value(weekly_return),
+            "signal": bool(history_signal),
+            "action": "對沖" if history_signal else "持有",
         })
 
     report_items.append({
         "ticker": ticker,
         "name": name,
         "latestDate": latest_date.strftime("%Y-%m-%d"),
-        "latestWeekRange": latest_week_range,
+        "latestWeekRange": format_week_range(latest_date),
         "riskProbability": pct_value(latest_prob),
         "probabilityThreshold": pct_value(probability_threshold),
         "downsideThreshold": pct_value(downside_threshold),
         "downsideThresholdText": threshold_text,
         "weeklyReturn": pct_value(latest_ret),
         "signal": bool(signal),
-        "action": alert_title,
+        "action": "建議對沖" if signal else "正常持有",
         "history": history_items,
     })
-
-    all_sections += f"""
-    <div class="section" id="section-{ticker}">
-      <div class="section-title">{ticker} {name} 詳細分析</div>
-      <div class="metrics">
-        <div class="metric">
-          <div class="val" style="color:{prob_color};">{latest_prob:.1%}</div>
-          <div class="lbl">風險機率</div>
-        </div>
-        <div class="metric">
-          <div class="val">{probability_threshold:.1%}</div>
-          <div class="lbl">機率觸發門檻</div>
-        </div>
-        <div class="metric">
-          <div class="val" style="color:#c0392b;">{threshold_text}</div>
-          <div class="lbl">尾部跌幅門檻</div>
-        </div>
-        <div class="metric">
-          <div class="val" style="color:{ret_color};">{ret_sign}{latest_ret:.1%}</div>
-          <div class="lbl">上週報酬</div>
-        </div>
-      </div>
-      <p class="note">尾部跌幅門檻代表此股票歷史訓練期間最差 10% 週報酬的分界；模型用它定義「跌幅超過多少」屬於需要警戒的尾部風險事件。</p>
-      <table class="history-table">
-        <tr><th>週次</th><th>風險機率</th><th>上週報酬</th><th>訊號</th></tr>
-        {history_rows}
-      </table>
-    </div>
-    """
 
 hedge_count = sum(1 for r in results if r["signal"])
 report_data = {
@@ -293,60 +240,17 @@ with open(public_dir / "report-data.json", "w", encoding="utf-8") as f:
     json.dump(report_data, f, ensure_ascii=False, indent=2)
 print("網站資料已儲存至 public/report-data.json")
 
-html = f"""<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<style>
-  * {{ box-sizing: border-box; }}
-  body {{ font-family: 'Helvetica Neue', Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }}
-  .container {{ max-width: 900px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }}
-  .header {{ background: #1a1a2e; color: white; padding: 28px 32px; }}
-  .header h1 {{ margin: 0; font-size: 20px; letter-spacing: 2px; color: #e0e0ff; }}
-  .section {{ padding: 24px 32px; border-bottom: 1px solid #eee; }}
-  .section-title {{ font-size: 14px; color: #333; font-weight:bold; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 18px; border-left: 4px solid #1a1a2e; padding-left: 10px; }}
-  .metrics {{ display: flex; gap: 12px; margin-bottom: 15px; }}
-  .metric {{ flex: 1; background: #f9f9f9; border-radius: 6px; padding: 12px; text-align: center; border: 1px solid #eee; }}
-  .metric .val {{ font-size: 18px; font-weight: bold; }}
-  .metric .lbl {{ font-size: 11px; color: #999; margin-top: 4px; }}
-  .history-table {{ width: 100%; border-collapse: collapse; margin-top: 10px; }}
-  .history-table th {{ font-size: 11px; color: #999; text-align: left; padding: 8px 0; border-bottom: 1px solid #eee; }}
-  .history-table td {{ font-size: 12px; color: #333; padding: 8px 0; border-bottom: 1px solid #f5f5f5; }}
-  .badge {{ display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }}
-  .badge.hedge {{ background: #fff3cd; color: #856404; }}
-  .badge.hold {{ background: #d4edda; color: #155724; }}
-  .footer {{ padding: 16px 32px; background: #f9f9f9; font-size: 11px; color: #bbb; text-align: center; }}
-  .summary-table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
-  .summary-table th {{ background: #f8f9fa; padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6; font-size: 12px; }}
-  .summary-table td {{ padding: 12px; border-bottom: 1px solid #dee2e6; font-size: 12px; }}
-  .muted {{ color: #888; font-size: 11px; }}
-  .note {{ color: #777; font-size: 12px; line-height: 1.6; margin: 4px 0 12px; }}
-</style>
-</head>
-<body>
-<div class="container">
-  <div class="header">
-    <h1>多檔股票風險對沖通報</h1>
-    <p>日期：{format_week_range(results[0]['latest_date'])} | XGBOOST TAIL RISK MODEL</p>
-  </div>
-
-  <div class="section">
-    <div class="section-title">全體股票摘要</div>
-    <table class="summary-table">
-      <tr><th>股票</th><th>風險機率</th><th>機率門檻</th><th>尾部跌幅門檻</th><th>建議行動</th></tr>
-      {summary_rows}
-    </table>
-    <p class="note">說明：是否建議對沖由 XGBoost 預測的風險機率判斷；「尾部跌幅門檻」則回答每支股票大約跌超過多少，會被模型標記為尾部風險事件。</p>
-  </div>
-
-  {all_sections}
-
-  <div class="footer">
-    此報告由 XGBoost 模型自動生成，僅供參考，不構成投資建議。
-  </div>
-</div>
-</body>
-</html>"""
+template_path = Path(__file__).with_name("email-template.js")
+template_result = subprocess.run(
+    ["node", str(template_path)],
+    input=json.dumps(report_data, ensure_ascii=False),
+    text=True,
+    encoding="utf-8",
+    capture_output=True,
+    check=True,
+)
+html = template_result.stdout
+print("Email HTML 已由 email-template.js 產生")
 
 # =========================================================
 # 5. 發送 Email
