@@ -76,6 +76,26 @@ const renderHeader = () => {
   document.getElementById('metric-validation-f1').textContent = formatPercent(metrics.validationF1);
   document.getElementById('metric-sample').textContent =
     `${metrics.stockCount || 0} 檔、${metrics.testWeeks || 0} 個測試週，含 ${metrics.tailEvents || 0} 次尾部事件`;
+
+  const challenger = state.data.challengerMetrics || {};
+  const governance = state.data.modelGovernance || {};
+  document.getElementById('challenger-status').textContent =
+    governance.statusText || '新模型資料累積中';
+  document.getElementById('challenger-pr-auc').textContent =
+    formatPercent(challenger.prAuc);
+  document.getElementById('challenger-recall').textContent =
+    formatPercent(challenger.recall);
+  document.getElementById('challenger-fpr').textContent =
+    formatPercent(challenger.falsePositiveRate);
+  document.getElementById('challenger-drawdown').textContent =
+    formatPercent(challenger.maxDrawdownImprovement, { sign: true });
+  document.getElementById('challenger-policy').textContent =
+    governance.thresholdPolicy
+      ? `${governance.thresholdPolicy}；官方 point-in-time 資料已累積 ${governance.officialHistoryWeeks || 0} 週。`
+      : '依對沖成本調整警報門檻。';
+  const reasons = governance.promotionReasons || [];
+  document.getElementById('challenger-reasons').textContent =
+    reasons.length ? `尚未替換原因：${reasons.join('、')}` : '所有升級條件均已通過。';
 };
 
 const chartDefaults = () => {
