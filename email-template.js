@@ -11,6 +11,7 @@ function escapeHtml(value) {
 
 function percent(value, showSign = false) {
   const number = Number(value);
+  if (!Number.isFinite(number)) return "-";
   const sign = showSign && number >= 0 ? "+" : "";
   return `${sign}${(number * 100).toFixed(1)}%`;
 }
@@ -71,6 +72,9 @@ function renderStockSection(stock) {
 }
 
 function renderEmail(report) {
+  const challenger = report.challengerMetrics || {};
+  const governance = report.modelGovernance || {};
+  const promotionReasons = governance.promotionReasons || [];
   const summaryRows = report.stocks.map(renderSummaryRow).join("");
   const stockSections = report.stocks.map(renderStockSection).join("");
 
@@ -135,6 +139,16 @@ function renderEmail(report) {
       <div class="metric"><div class="val">${percent(report.modelMetrics.f1)}</div><div class="lbl">F1 Score</div></div>
     </div>
     <p class="note">類別權重已由訓練集內的時間序列驗證自動校準，平均為 ${Number(report.modelMetrics.averageClassWeight).toFixed(2)}×，調參驗證 F1 為 ${percent(report.modelMetrics.validationF1)}。最外層 ${escapeHtml(report.modelMetrics.testWeeks)} 個測試週完全不參與調參，含 ${escapeHtml(report.modelMetrics.tailEvents)} 次尾部事件。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">新模型影子評估｜${escapeHtml(governance.statusText || "資料累積中")}</div>
+    <div class="metrics">
+      <div class="metric"><div class="val">${percent(challenger.prAuc)}</div><div class="lbl">PR-AUC</div></div>
+      <div class="metric"><div class="val">${percent(challenger.recall)}</div><div class="lbl">Recall</div></div>
+      <div class="metric"><div class="val">${percent(challenger.falsePositiveRate)}</div><div class="lbl">誤報率</div></div>
+      <div class="metric"><div class="val">${percent(challenger.maxDrawdownImprovement)}</div><div class="lbl">扣成本後回撤改善</div></div>
+    </div>
+    <p class="note">${escapeHtml(governance.thresholdPolicy || "依對沖成本調整門檻")}。官方 point-in-time 資料已累積 ${escapeHtml(governance.officialHistoryWeeks || 0)} 週。${promotionReasons.length ? `尚未替換：${escapeHtml(promotionReasons.join("、"))}` : "新模型已通過全部升級條件。"}</p>
   </div>
   <div class="section">
     <div class="section-title">全體股票摘要</div>
