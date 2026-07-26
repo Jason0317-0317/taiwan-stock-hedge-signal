@@ -9,6 +9,8 @@ on:
       - main
     paths:
       - hedge_signal.py
+      - challenger_model.py
+      - market_data.py
       - email-template.js
       - .github/workflows/weekly_signal.yml
 
@@ -47,7 +49,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/report-data.json
+          git add public/report-data.json data/official_market_snapshots.csv
           if git diff --cached --quiet; then
             echo "No dashboard data changes to commit."
           else
