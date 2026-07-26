@@ -10,6 +10,15 @@ from pathlib import Path
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from challenger_model import evaluate_walk_forward, promotion_decision
+from market_data import (
+    download_global_features,
+    official_weekly_features,
+    update_official_cache,
+)
+
+GLOBAL_FEATURES = pd.DataFrame()
+OFFICIAL_FEATURES = pd.DataFrame()
 
 # =========================================================
 # 1. 資料下載與清洗
@@ -32,6 +41,10 @@ def get_cleaned_data(ticker, mkt_ticker, start):
         "Mkt_Close": df_mkt["Close"].resample("W-FRI").last(),
     }).dropna()
 
+    if not GLOBAL_FEATURES.empty:
+        df_w = df_w.join(GLOBAL_FEATURES, how="left")
+    if not OFFICIAL_FEATURES.empty:
+        df_w = df_w.join(OFFICIAL_FEATURES, how="left")
     return df_w
 
 # =========================================================
@@ -56,7 +69,11 @@ def build_features(df):
     df["Dist_Low_4w"] = (df["Close"] - low_4w) / (low_4w + 1e-6)
 
     df = df.replace([np.inf, -np.inf], np.nan)
-    df = df.dropna()
+    df = df.dropna(subset=[
+        "Close", "Volume", "Mkt_Close", "Volat_4w", "Vol_Ratio", "Bias_4w",
+        "MA_Spread", "Mom_4w", "Vol_Change", "Ret_Lag1", "Ret_Lag2",
+        "Dist_Low_4w",
+    ])
 
     return df
 
@@ -170,6 +187,28 @@ def process_ticker(ticker, name, mkt_ticker, start_date):
         "validationF1": best_validation_score[0],
     }
 
+    expanded_features = features + [
+        column
+        for column in model_df.columns
+        if column not in features
+        and (
+            column.startswith(tuple([
+                "VIX_", "USD_TWD_", "SP500_", "NASDAQ_", "SOX_", "NIKKEI_"
+            ]))
+            or column.endswith("_missing")
+            or column.endswith("_change_1w")
+            or column in {
+                "put_call_oi_ratio",
+                "foreign_futures_net",
+                "foreign_institutional_net",
+                "institutional_net",
+                "margin_balance",
+                "short_balance",
+            }
+        )
+    ]
+    challenger = evaluate_walk_forward(model_df, expanded_features)
+
     latest_prob = model.predict_proba(df_feat.iloc[[-1]][features])[:, 1][0]
     latest_date = df_feat.index[-1]
     latest_ret = df_feat["Ret"].iloc[-1]
@@ -190,6 +229,7 @@ def process_ticker(ticker, name, mkt_ticker, start_date):
         "history_df": history_df,
         "history_proba": history_proba,
         "metrics": metrics,
+        "challenger": challenger,
     }
 
 def format_downside_threshold(value):
@@ -231,6 +271,11 @@ STOCKS = {
 }
 MARKET = "^TWII"
 START_DATE = "2010-01-01"
+
+snapshot_date = pd.offsets.BDay().rollback(pd.Timestamp.today().normalize())
+official_cache = update_official_cache(snapshot_date)
+GLOBAL_FEATURES = download_global_features(START_DATE)
+OFFICIAL_FEATURES = official_weekly_features(official_cache)
 
 results = []
 for ticker, name in STOCKS.items():
@@ -298,6 +343,7 @@ for res in results:
         "signal": bool(signal),
         "action": "建議對沖" if signal else "正常持有",
         "history": history_items,
+        "challenger": res["challenger"],
     })
 
 hedge_count = sum(1 for r in results if r["signal"])
@@ -315,6 +361,40 @@ model_metrics["averageClassWeight"] = round(
 model_metrics["validationF1"] = pct_value(
     np.mean([r["metrics"]["validationF1"] for r in results])
 )
+
+challenger_rows = [r["challenger"] for r in results if r["challenger"]]
+challenger_metrics = None
+if challenger_rows:
+    metric_keys = [
+        "prAuc", "recall", "falsePositiveRate", "rawMaxDrawdown",
+        "hedgedMaxDrawdown", "maxDrawdownImprovement", "threshold",
+        "hedgeCost", "alertRate",
+    ]
+    challenger_metrics = {
+        key: pct_value(np.mean([row[key] for row in challenger_rows]))
+        for key in metric_keys
+    }
+    challenger_metrics["evaluationWeeks"] = sum(
+        row["evaluationWeeks"] for row in challenger_rows
+    )
+    challenger_metrics["stockCount"] = len(challenger_rows)
+    challenger_metrics["averageFeatureCount"] = round(
+        float(np.mean([row["featureCount"] for row in challenger_rows])), 1
+    )
+
+official_history_weeks = len(OFFICIAL_FEATURES.dropna(how="all"))
+promoted, promotion_reasons = promotion_decision(
+    challenger_metrics, official_history_weeks
+)
+model_governance = {
+    "incumbent": "XGBoost Tail Risk Model",
+    "challenger": "ExtraTrees Walk-Forward Cost-Aware Model",
+    "status": "promoted" if promoted else "shadow",
+    "statusText": "新模型已通過升級門檻" if promoted else "舊模型在線，新模型影子評估中",
+    "officialHistoryWeeks": official_history_weeks,
+    "promotionReasons": promotion_reasons,
+    "thresholdPolicy": "依 0.3% 單次對沖成本，優先降低扣成本後最大回撤",
+}
 report_data = {
     "title": "台股尾部風險對沖通報",
     "latestDate": results[0]["latest_date"].strftime("%Y-%m-%d"),
@@ -325,6 +405,8 @@ report_data = {
     "stockCount": len(report_items),
     "hedgeCount": hedge_count,
     "modelMetrics": model_metrics,
+    "challengerMetrics": challenger_metrics,
+    "modelGovernance": model_governance,
     "stocks": report_items,
     "disclaimer": "此報告由 XGBoost 模型自動生成，僅供研究與風險控管參考，不構成投資建議。",
 }

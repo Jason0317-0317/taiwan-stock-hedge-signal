@@ -68,6 +68,23 @@
       </p>
     </section>
 
+    <section class="model-panel" aria-label="新舊模型治理">
+      <div class="panel-title compact">
+        <h2>新模型影子評估</h2>
+        <span id="challenger-status">載入中</span>
+      </div>
+      <div class="model-metrics">
+        <div><span>PR-AUC</span><strong id="challenger-pr-auc">-</strong><small>尾部事件排序能力</small></div>
+        <div><span>Recall</span><strong id="challenger-recall">-</strong><small>抓到尾部下跌比例</small></div>
+        <div><span>誤報率</span><strong id="challenger-fpr">-</strong><small>正常週被誤警報比例</small></div>
+        <div><span>回撤改善</span><strong id="challenger-drawdown">-</strong><small>已扣除對沖成本</small></div>
+      </div>
+      <p class="metric-note" id="challenger-policy">
+        舊模型維持在線；新模型通過經濟效益門檻後才會替換。
+      </p>
+      <p class="metric-note" id="challenger-reasons"></p>
+    </section>
+
     <section class="toolbar" aria-label="排序與篩選">
       <div class="tabs" role="tablist" aria-label="訊號篩選">
         <button class="tab active" data-filter="all" type="button">全部</button>
