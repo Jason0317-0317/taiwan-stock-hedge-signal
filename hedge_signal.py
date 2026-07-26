@@ -104,18 +104,54 @@ def process_ticker(ticker, name, mkt_ticker, start_date):
     if len(np.unique(y_train)) < 2:
         return None
 
-    pos_weight = (y_train == 0).sum() / (y_train == 1).sum()
+    def make_model(class_weight):
+        return xgb.XGBClassifier(
+            n_estimators=200,
+            max_depth=3,
+            learning_rate=0.03,
+            subsample=0.7,
+            colsample_bytree=0.7,
+            scale_pos_weight=class_weight,
+            eval_metric="logloss",
+            random_state=42,
+        )
 
-    model = xgb.XGBClassifier(
-        n_estimators=200,
-        max_depth=3,
-        learning_rate=0.03,
-        subsample=0.7,
-        colsample_bytree=0.7,
-        scale_pos_weight=pos_weight,
-        eval_metric="logloss",
-        random_state=42,
-    )
+    # 在訓練集內再切出最後 20% 做時間序列驗證，自動挑選少數類別權重。
+    # 最外層 test_df 完全不參與調參，仍可提供可信的樣本外指標。
+    tune_split_idx = int(len(train_df) * 0.8)
+    tune_train_df = train_df.iloc[:tune_split_idx]
+    tune_valid_df = train_df.iloc[tune_split_idx:]
+    X_tune_train = tune_train_df[features]
+    X_tune_valid = tune_valid_df[features]
+    y_tune_train = (tune_train_df["Target_Ret"] < downside_threshold).astype(int)
+    y_tune_valid = (tune_valid_df["Target_Ret"] < downside_threshold).astype(int)
+
+    base_pos_weight = (y_tune_train == 0).sum() / max((y_tune_train == 1).sum(), 1)
+    weight_candidates = sorted({
+        round(float(np.clip(base_pos_weight * multiplier, 1.0, 50.0)), 4)
+        for multiplier in (0.5, 1.0, 1.5, 2.0, 3.0)
+    })
+    best_weight = weight_candidates[0]
+    best_validation_score = (-1.0, -1.0, -1.0, float("-inf"))
+
+    for candidate_weight in weight_candidates:
+        candidate_model = make_model(candidate_weight)
+        candidate_model.fit(X_tune_train, y_tune_train)
+        tune_train_proba = candidate_model.predict_proba(X_tune_train)[:, 1]
+        candidate_threshold = np.percentile(tune_train_proba, 90)
+        tune_valid_proba = candidate_model.predict_proba(X_tune_valid)[:, 1]
+        tune_valid_pred = (tune_valid_proba >= candidate_threshold).astype(int)
+        candidate_score = (
+            f1_score(y_tune_valid, tune_valid_pred, zero_division=0),
+            recall_score(y_tune_valid, tune_valid_pred, zero_division=0),
+            precision_score(y_tune_valid, tune_valid_pred, zero_division=0),
+            -abs(candidate_weight - base_pos_weight),
+        )
+        if candidate_score > best_validation_score:
+            best_validation_score = candidate_score
+            best_weight = candidate_weight
+
+    model = make_model(best_weight)
     model.fit(X_train, y_train)
 
     train_proba = model.predict_proba(X_train)[:, 1]
@@ -129,6 +165,9 @@ def process_ticker(ticker, name, mkt_ticker, start_date):
         "f1": f1_score(y_test, test_pred, zero_division=0),
         "testWeeks": len(y_test),
         "tailEvents": int(y_test.sum()),
+        "classWeight": float(best_weight),
+        "baseClassWeight": float(base_pos_weight),
+        "validationF1": best_validation_score[0],
     }
 
     latest_prob = model.predict_proba(df_feat.iloc[[-1]][features])[:, 1][0]
@@ -247,7 +286,13 @@ for res in results:
         "downsideThresholdText": threshold_text,
         "weeklyReturn": pct_value(latest_ret),
         "metrics": {
-            key: (pct_value(value) if key in {"accuracy", "precision", "recall", "f1"} else value)
+            key: (
+                pct_value(value)
+                if key in {"accuracy", "precision", "recall", "f1", "validationF1"}
+                else round(float(value), 4)
+                if key in {"classWeight", "baseClassWeight"}
+                else value
+            )
             for key, value in metrics.items()
         },
         "signal": bool(signal),
@@ -264,6 +309,12 @@ model_metrics = {
 model_metrics["stockCount"] = len(results)
 model_metrics["testWeeks"] = sum(r["metrics"]["testWeeks"] for r in results)
 model_metrics["tailEvents"] = sum(r["metrics"]["tailEvents"] for r in results)
+model_metrics["averageClassWeight"] = round(
+    float(np.mean([r["metrics"]["classWeight"] for r in results])), 4
+)
+model_metrics["validationF1"] = pct_value(
+    np.mean([r["metrics"]["validationF1"] for r in results])
+)
 report_data = {
     "title": "台股尾部風險對沖通報",
     "latestDate": results[0]["latest_date"].strftime("%Y-%m-%d"),
