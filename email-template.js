@@ -59,7 +59,7 @@ function renderStockSection(stock) {
         <div class="metric"><div class="val" style="color:${probabilityColor};">${percent(stock.riskProbability)}</div><div class="lbl">風險機率</div></div>
         <div class="metric"><div class="val">${percent(stock.probabilityThreshold)}</div><div class="lbl">機率觸發門檻</div></div>
         <div class="metric"><div class="val" style="color:#c0392b;">${escapeHtml(stock.downsideThresholdText)}</div><div class="lbl">尾部跌幅門檻</div></div>
-        <div class="metric"><div class="val">${percent(stock.metrics.accuracy)}</div><div class="lbl">模型 Accuracy</div></div>
+        <div class="metric"><div class="val">${Number(stock.metrics.classWeight).toFixed(2)}×</div><div class="lbl">自動類別權重</div></div>
         <div class="metric"><div class="val">${percent(stock.metrics.f1)}</div><div class="lbl">模型 F1</div></div>
       </div>
       <p class="note">尾部跌幅門檻代表此股票歷史訓練期間最差 10% 週報酬的分界；模型用它定義「跌幅超過多少」屬於需要警戒的尾部風險事件。</p>
@@ -134,7 +134,7 @@ function renderEmail(report) {
       <div class="metric"><div class="val">${percent(report.modelMetrics.recall)}</div><div class="lbl">Recall</div></div>
       <div class="metric"><div class="val">${percent(report.modelMetrics.f1)}</div><div class="lbl">F1 Score</div></div>
     </div>
-    <p class="note">以時間順序保留的 ${escapeHtml(report.modelMetrics.testWeeks)} 個測試週計算，含 ${escapeHtml(report.modelMetrics.tailEvents)} 次尾部事件。尾部事件較少，Accuracy 請搭配 Precision、Recall 與 F1 判讀。</p>
+    <p class="note">類別權重已由訓練集內的時間序列驗證自動校準，平均為 ${Number(report.modelMetrics.averageClassWeight).toFixed(2)}×，調參驗證 F1 為 ${percent(report.modelMetrics.validationF1)}。最外層 ${escapeHtml(report.modelMetrics.testWeeks)} 個測試週完全不參與調參，含 ${escapeHtml(report.modelMetrics.tailEvents)} 次尾部事件。</p>
   </div>
   <div class="section">
     <div class="section-title">全體股票摘要</div>

@@ -71,6 +71,9 @@ const renderHeader = () => {
   document.getElementById('metric-precision').textContent = formatPercent(metrics.precision);
   document.getElementById('metric-recall').textContent = formatPercent(metrics.recall);
   document.getElementById('metric-f1').textContent = formatPercent(metrics.f1);
+  document.getElementById('metric-class-weight').textContent =
+    typeof metrics.averageClassWeight === 'number' ? `${metrics.averageClassWeight.toFixed(2)}×` : '-';
+  document.getElementById('metric-validation-f1').textContent = formatPercent(metrics.validationF1);
   document.getElementById('metric-sample').textContent =
     `${metrics.stockCount || 0} 檔、${metrics.testWeeks || 0} 個測試週，含 ${metrics.tailEvents || 0} 次尾部事件`;
 };
@@ -353,8 +356,8 @@ const renderCards = (stocks) => {
           <strong class="danger">${stock.downsideThresholdText}</strong>
         </div>
         <div class="metric-cell">
-          <span>模型 Accuracy</span>
-          <strong>${formatPercent(stock.metrics?.accuracy)}</strong>
+          <span>自動類別權重</span>
+          <strong>${typeof stock.metrics?.classWeight === 'number' ? `${stock.metrics.classWeight.toFixed(2)}×` : '-'}</strong>
         </div>
         <div class="metric-cell">
           <span>模型 F1</span>
