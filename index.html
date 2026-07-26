@@ -61,7 +61,11 @@
         <div><span>Recall</span><strong id="metric-recall">-</strong><small>實際尾部下跌被抓到比例</small></div>
         <div><span>F1 Score</span><strong id="metric-f1">-</strong><small>Precision 與 Recall 的平衡</small></div>
       </div>
-      <p class="metric-note">尾部事件本來就少，Accuracy 可能因多數週沒有大跌而偏高，請優先搭配 Precision、Recall 與 F1 判讀。</p>
+      <p class="metric-note">
+        類別權重已由訓練集內的時間序列驗證自動校準：平均權重
+        <strong id="metric-class-weight">-</strong>，調參驗證 F1
+        <strong id="metric-validation-f1">-</strong>。尾部事件本來就少，請優先搭配 Precision、Recall 與 F1 判讀。
+      </p>
     </section>
 
     <section class="toolbar" aria-label="排序與篩選">
