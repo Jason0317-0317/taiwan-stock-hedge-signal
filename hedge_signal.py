@@ -9,6 +9,7 @@ import subprocess
 from pathlib import Path
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 
 # =========================================================
 # 1. 資料下載與清洗
@@ -83,14 +84,22 @@ def process_ticker(ticker, name, mkt_ticker, start_date):
     if len(df_feat) < 15:
         return None
 
-    split_idx = int(len(df_feat) * 0.8)
-    train_df = df_feat.iloc[:split_idx]
+    # 每一列的特徵只用來預測「下一週」是否發生尾部下跌，避免把同週
+    # 已知報酬混入本週預測。最後一列沒有下一週答案，保留作最新預測。
+    model_df = df_feat.copy()
+    model_df["Target_Ret"] = model_df["Ret"].shift(-1)
+    labeled_df = model_df.dropna(subset=["Target_Ret"])
+    split_idx = int(len(labeled_df) * 0.8)
+    train_df = labeled_df.iloc[:split_idx]
+    test_df = labeled_df.iloc[split_idx:]
 
     # 這個門檻是「歷史週報酬最差 10%」的分界。
     # 例如 -5.3% 代表模型把單週跌幅超過 5.3% 視為尾部風險事件。
-    downside_threshold = train_df["Ret"].quantile(0.10)
-    y_train = (train_df["Ret"] < downside_threshold).astype(int)
+    downside_threshold = train_df["Target_Ret"].quantile(0.10)
+    y_train = (train_df["Target_Ret"] < downside_threshold).astype(int)
+    y_test = (test_df["Target_Ret"] < downside_threshold).astype(int)
     X_train = train_df[features]
+    X_test = test_df[features]
 
     if len(np.unique(y_train)) < 2:
         return None
@@ -109,16 +118,26 @@ def process_ticker(ticker, name, mkt_ticker, start_date):
     )
     model.fit(X_train, y_train)
 
-    all_proba = model.predict_proba(df_feat[features])[:, 1]
-    probability_threshold = np.percentile(all_proba, 90)
+    train_proba = model.predict_proba(X_train)[:, 1]
+    probability_threshold = np.percentile(train_proba, 90)
+    test_proba = model.predict_proba(X_test)[:, 1]
+    test_pred = (test_proba >= probability_threshold).astype(int)
+    metrics = {
+        "accuracy": accuracy_score(y_test, test_pred),
+        "precision": precision_score(y_test, test_pred, zero_division=0),
+        "recall": recall_score(y_test, test_pred, zero_division=0),
+        "f1": f1_score(y_test, test_pred, zero_division=0),
+        "testWeeks": len(y_test),
+        "tailEvents": int(y_test.sum()),
+    }
 
-    latest_prob = all_proba[-1]
+    latest_prob = model.predict_proba(df_feat.iloc[[-1]][features])[:, 1][0]
     latest_date = df_feat.index[-1]
     latest_ret = df_feat["Ret"].iloc[-1]
     signal = latest_prob >= probability_threshold
 
-    history_df = df_feat.iloc[-6:].copy()
-    history_proba = all_proba[-6:]
+    history_df = labeled_df.iloc[-6:].copy()
+    history_proba = model.predict_proba(history_df[features])[:, 1]
 
     return {
         "ticker": ticker,
@@ -131,6 +150,7 @@ def process_ticker(ticker, name, mkt_ticker, start_date):
         "signal": signal,
         "history_df": history_df,
         "history_proba": history_proba,
+        "metrics": metrics,
     }
 
 def format_downside_threshold(value):
@@ -144,6 +164,12 @@ def pct_value(value):
 def format_week_range(end_date):
     end_date = pd.Timestamp(end_date)
     start_date = end_date - pd.Timedelta(days=4)
+    return f"{start_date.strftime('%Y-%m-%d')}～{end_date.strftime('%Y-%m-%d')}"
+
+def format_next_week_range(observation_end_date):
+    observation_end_date = pd.Timestamp(observation_end_date)
+    start_date = observation_end_date + pd.Timedelta(days=3)
+    end_date = observation_end_date + pd.Timedelta(days=7)
     return f"{start_date.strftime('%Y-%m-%d')}～{end_date.strftime('%Y-%m-%d')}"
 
 # =========================================================
@@ -191,15 +217,18 @@ for res in results:
     latest_date = res["latest_date"]
     history_df = res["history_df"]
     history_proba = res["history_proba"]
+    metrics = res["metrics"]
 
     threshold_text = format_downside_threshold(downside_threshold)
     history_items = []
     for i in range(len(history_df) - 1, -1, -1):
         probability = history_proba[i]
-        weekly_return = history_df["Ret"].iloc[i]
+        weekly_return = history_df["Target_Ret"].iloc[i]
+        observation_date = history_df.index[i]
         history_signal = probability >= probability_threshold
         history_items.append({
-            "date": format_week_range(history_df.index[i]),
+            "date": format_next_week_range(observation_date),
+            "observationWeekRange": format_week_range(observation_date),
             "riskProbability": pct_value(probability),
             "weeklyReturn": pct_value(weekly_return),
             "signal": bool(history_signal),
@@ -210,26 +239,41 @@ for res in results:
         "ticker": ticker,
         "name": name,
         "latestDate": latest_date.strftime("%Y-%m-%d"),
-        "latestWeekRange": format_week_range(latest_date),
+        "forecastWeekRange": format_next_week_range(latest_date),
+        "observationWeekRange": format_week_range(latest_date),
         "riskProbability": pct_value(latest_prob),
         "probabilityThreshold": pct_value(probability_threshold),
         "downsideThreshold": pct_value(downside_threshold),
         "downsideThresholdText": threshold_text,
         "weeklyReturn": pct_value(latest_ret),
+        "metrics": {
+            key: (pct_value(value) if key in {"accuracy", "precision", "recall", "f1"} else value)
+            for key, value in metrics.items()
+        },
         "signal": bool(signal),
         "action": "建議對沖" if signal else "正常持有",
         "history": history_items,
     })
 
 hedge_count = sum(1 for r in results if r["signal"])
+metric_names = ("accuracy", "precision", "recall", "f1")
+model_metrics = {
+    key: pct_value(np.mean([r["metrics"][key] for r in results]))
+    for key in metric_names
+}
+model_metrics["stockCount"] = len(results)
+model_metrics["testWeeks"] = sum(r["metrics"]["testWeeks"] for r in results)
+model_metrics["tailEvents"] = sum(r["metrics"]["tailEvents"] for r in results)
 report_data = {
     "title": "台股尾部風險對沖通報",
     "latestDate": results[0]["latest_date"].strftime("%Y-%m-%d"),
-    "latestWeekRange": format_week_range(results[0]["latest_date"]),
+    "forecastWeekRange": format_next_week_range(results[0]["latest_date"]),
+    "observationWeekRange": format_week_range(results[0]["latest_date"]),
     "model": "XGBoost Tail Risk Model",
     "market": MARKET,
     "stockCount": len(report_items),
     "hedgeCount": hedge_count,
+    "modelMetrics": model_metrics,
     "stocks": report_items,
     "disclaimer": "此報告由 XGBoost 模型自動生成，僅供研究與風險控管參考，不構成投資建議。",
 }
@@ -260,7 +304,7 @@ try:
     password = os.environ["SENDER_PASSWORD"]
     receiver = os.environ["RECEIVER_EMAIL"]
 
-    subject = f"【風險對沖週報】{len(results)}檔監控中，{hedge_count}檔建議對沖 ({format_week_range(results[0]['latest_date'])})"
+    subject = f"【風險對沖週報】{len(results)}檔監控中，{hedge_count}檔建議對沖 ({format_next_week_range(results[0]['latest_date'])})"
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject

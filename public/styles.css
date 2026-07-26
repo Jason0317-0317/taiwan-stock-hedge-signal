@@ -109,14 +109,101 @@ h1 {
   margin: 22px 0;
 }
 
+.week-separation {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 22px 0;
+}
+
+.week-panel {
+  padding: 18px;
+  border: 2px solid;
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.week-panel.forecast {
+  border-color: var(--blue);
+  background: #edf7fb;
+}
+
+.week-panel.observed {
+  border-color: var(--line);
+}
+
+.week-panel span,
+.period-label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.week-panel strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 20px;
+}
+
+.week-panel p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .stat-panel,
 .table-panel,
 .stock-card,
-.chart-panel {
+.chart-panel,
+.model-panel {
   background: var(--panel);
   border: 1px solid rgba(23, 32, 38, 0.08);
   border-radius: 8px;
   box-shadow: var(--shadow);
+}
+
+.model-panel {
+  margin: 18px 0;
+  overflow: hidden;
+}
+
+.model-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+}
+
+.model-metrics > div {
+  padding: 16px 18px;
+  border-right: 1px solid var(--line);
+}
+
+.model-metrics > div:last-child {
+  border-right: 0;
+}
+
+.model-metrics span,
+.model-metrics small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.model-metrics strong {
+  display: block;
+  margin: 4px 0;
+  font-size: 25px;
+}
+
+.metric-note {
+  margin: 0;
+  padding: 12px 18px;
+  border-top: 1px solid var(--line);
+  background: var(--amber-soft);
+  color: var(--amber);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .stat-panel {
@@ -270,6 +357,29 @@ h1 {
 
 .probability {
   padding: 0 18px 16px;
+}
+
+.period-label {
+  margin-bottom: 8px;
+}
+
+.forecast-label {
+  color: var(--blue);
+}
+
+.observed-strip {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--line);
+  background: #f7f9fa;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.observed-strip span {
+  color: var(--muted);
 }
 
 .probability .value {
@@ -478,8 +588,15 @@ td {
   }
 
   .summary-grid,
+  .week-separation,
+  .model-metrics,
   .stock-grid {
     grid-template-columns: 1fr;
+  }
+
+  .model-metrics > div {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
   }
 
   .search-box {

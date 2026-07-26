@@ -4,6 +4,13 @@ on:
   schedule:
     - cron: '0 0 * * 0'  # UTC 00:00 = 台灣時間週日 08:00
   workflow_dispatch:       # 也可以手動觸發
+  push:
+    branches:
+      - main
+    paths:
+      - hedge_signal.py
+      - email-template.js
+      - .github/workflows/weekly_signal.yml
 
 permissions:
   contents: write

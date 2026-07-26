@@ -53,15 +53,18 @@ function renderStockSection(stock) {
   return `
     <div class="section" id="section-${escapeHtml(stock.ticker)}">
       <div class="section-title">${escapeHtml(stock.ticker)} ${escapeHtml(stock.name)} 詳細分析</div>
+      <div class="period forecast"><b>本週預測：</b>${escapeHtml(stock.forecastWeekRange)}｜風險機率與建議行動</div>
+      <div class="period observed"><b>上週已完成：</b>${escapeHtml(stock.observationWeekRange)}｜已實現報酬 ${percent(stock.weeklyReturn, true)}</div>
       <div class="metrics">
         <div class="metric"><div class="val" style="color:${probabilityColor};">${percent(stock.riskProbability)}</div><div class="lbl">風險機率</div></div>
         <div class="metric"><div class="val">${percent(stock.probabilityThreshold)}</div><div class="lbl">機率觸發門檻</div></div>
         <div class="metric"><div class="val" style="color:#c0392b;">${escapeHtml(stock.downsideThresholdText)}</div><div class="lbl">尾部跌幅門檻</div></div>
-        <div class="metric"><div class="val" style="color:${returnColor};">${percent(stock.weeklyReturn, true)}</div><div class="lbl">上週報酬</div></div>
+        <div class="metric"><div class="val">${percent(stock.metrics.accuracy)}</div><div class="lbl">模型 Accuracy</div></div>
+        <div class="metric"><div class="val">${percent(stock.metrics.f1)}</div><div class="lbl">模型 F1</div></div>
       </div>
       <p class="note">尾部跌幅門檻代表此股票歷史訓練期間最差 10% 週報酬的分界；模型用它定義「跌幅超過多少」屬於需要警戒的尾部風險事件。</p>
       <table class="history-table">
-        <tr><th>週次</th><th>風險機率</th><th>上週報酬</th><th>訊號</th></tr>
+        <tr><th>預測週次</th><th>風險機率</th><th>該週實際報酬</th><th>訊號</th></tr>
         ${historyRows}
       </table>
     </div>`;
@@ -100,6 +103,9 @@ function renderEmail(report) {
   .badge.hold { background: #d4edda; color: #155724; }
   .muted { color: #888; font-size: 11px; }
   .note { color: #777; font-size: 12px; line-height: 1.6; margin: 4px 0 12px; }
+  .period { padding: 10px 12px; margin-bottom: 8px; border-radius: 6px; font-size: 12px; }
+  .period.forecast { background: #eaf6fb; border: 1px solid #166c8c; }
+  .period.observed { background: #f5f5f5; border: 1px solid #ddd; }
   .footer { padding: 16px 32px; background: #f9f9f9; font-size: 11px; color: #999; text-align: center; }
   @media (max-width: 600px) {
     body { padding: 0; }
@@ -113,7 +119,22 @@ function renderEmail(report) {
 <div class="container">
   <div class="header">
     <h1>多檔股票風險對沖通報</h1>
-    <p>日期：${escapeHtml(report.latestWeekRange)} | ${escapeHtml(report.model).toUpperCase()}</p>
+    <p>本週預測：${escapeHtml(report.forecastWeekRange)} | ${escapeHtml(report.model).toUpperCase()}</p>
+  </div>
+  <div class="section">
+    <div class="section-title">本週預測與上週資料</div>
+    <div class="period forecast"><b>本週｜尚未發生：</b>${escapeHtml(report.forecastWeekRange)}。風險機率與建議行動屬於模型預測。</div>
+    <div class="period observed"><b>上週｜已完成資料：</b>${escapeHtml(report.observationWeekRange)}。週報酬與技術特徵來自這個交易週。</div>
+  </div>
+  <div class="section">
+    <div class="section-title">模型歷史準確度</div>
+    <div class="metrics">
+      <div class="metric"><div class="val">${percent(report.modelMetrics.accuracy)}</div><div class="lbl">Accuracy</div></div>
+      <div class="metric"><div class="val">${percent(report.modelMetrics.precision)}</div><div class="lbl">Precision</div></div>
+      <div class="metric"><div class="val">${percent(report.modelMetrics.recall)}</div><div class="lbl">Recall</div></div>
+      <div class="metric"><div class="val">${percent(report.modelMetrics.f1)}</div><div class="lbl">F1 Score</div></div>
+    </div>
+    <p class="note">以時間順序保留的 ${escapeHtml(report.modelMetrics.testWeeks)} 個測試週計算，含 ${escapeHtml(report.modelMetrics.tailEvents)} 次尾部事件。尾部事件較少，Accuracy 請搭配 Precision、Recall 與 F1 判讀。</p>
   </div>
   <div class="section">
     <div class="section-title">全體股票摘要</div>
