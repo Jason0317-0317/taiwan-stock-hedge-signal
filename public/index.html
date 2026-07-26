@@ -17,9 +17,22 @@
         <h1>台股尾部風險對沖通報</h1>
       </div>
       <div class="stamp">
-        <span>資料週次</span>
-        <strong id="latest-date">載入中</strong>
+        <span>本週風險預測</span>
+        <strong id="forecast-week">載入中</strong>
       </div>
+    </section>
+
+    <section class="week-separation" aria-label="本週預測與上週資料">
+      <article class="week-panel forecast">
+        <span>本週｜尚未發生</span>
+        <strong id="forecast-week-detail">-</strong>
+        <p>風險機率與對沖建議是模型對這一週的預測。</p>
+      </article>
+      <article class="week-panel observed">
+        <span>上週｜已完成資料</span>
+        <strong id="observation-week">-</strong>
+        <p>週報酬與技術特徵來自這個已結束的交易週。</p>
+      </article>
     </section>
 
     <section class="summary-grid" aria-label="整體統計">
@@ -35,6 +48,20 @@
         <span>市場基準</span>
         <strong id="market-code">-</strong>
       </article>
+    </section>
+
+    <section class="model-panel" aria-label="模型準確度">
+      <div class="panel-title compact">
+        <h2>模型歷史準確度</h2>
+        <span id="metric-sample">以時間順序保留的測試資料計算</span>
+      </div>
+      <div class="model-metrics">
+        <div><span>Accuracy</span><strong id="metric-accuracy">-</strong><small>全部預測答對比例</small></div>
+        <div><span>Precision</span><strong id="metric-precision">-</strong><small>發出警報後實際下跌比例</small></div>
+        <div><span>Recall</span><strong id="metric-recall">-</strong><small>實際尾部下跌被抓到比例</small></div>
+        <div><span>F1 Score</span><strong id="metric-f1">-</strong><small>Precision 與 Recall 的平衡</small></div>
+      </div>
+      <p class="metric-note">尾部事件本來就少，Accuracy 可能因多數週沒有大跌而偏高，請優先搭配 Precision、Recall 與 F1 判讀。</p>
     </section>
 
     <section class="toolbar" aria-label="排序與篩選">
@@ -95,7 +122,7 @@
               <th>風險機率</th>
               <th>機率門檻</th>
               <th>尾部跌幅門檻</th>
-              <th>上週報酬</th>
+              <th>上週已實現報酬</th>
               <th>建議行動</th>
             </tr>
           </thead>

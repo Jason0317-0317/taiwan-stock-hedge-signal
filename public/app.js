@@ -57,11 +57,22 @@ const visibleStocks = () => {
 };
 
 const renderHeader = () => {
-  document.getElementById('latest-date').textContent = state.data.latestDate;
+  const forecastWeek = state.data.forecastWeekRange || state.data.latestWeekRange || state.data.latestDate;
+  const observationWeek = state.data.observationWeekRange || state.data.latestWeekRange || state.data.latestDate;
+  document.getElementById('forecast-week').textContent = forecastWeek;
+  document.getElementById('forecast-week-detail').textContent = forecastWeek;
+  document.getElementById('observation-week').textContent = observationWeek;
   document.getElementById('stock-count').textContent = state.data.stockCount;
   document.getElementById('hedge-count').textContent = state.data.hedgeCount;
   document.getElementById('market-code').textContent = state.data.market;
   document.getElementById('disclaimer').textContent = state.data.disclaimer;
+  const metrics = state.data.modelMetrics || {};
+  document.getElementById('metric-accuracy').textContent = formatPercent(metrics.accuracy);
+  document.getElementById('metric-precision').textContent = formatPercent(metrics.precision);
+  document.getElementById('metric-recall').textContent = formatPercent(metrics.recall);
+  document.getElementById('metric-f1').textContent = formatPercent(metrics.f1);
+  document.getElementById('metric-sample').textContent =
+    `${metrics.stockCount || 0} 檔、${metrics.testWeeks || 0} 個測試週，含 ${metrics.tailEvents || 0} 次尾部事件`;
 };
 
 const chartDefaults = () => {
@@ -206,7 +217,7 @@ const renderRiskReturnChart = (stocks) => {
       maintainAspectRatio: false,
       scales: {
         x: {
-          title: { display: !small, text: '上週報酬' },
+          title: { display: !small, text: '上週已實現報酬' },
           grid: { color: 'rgba(216, 224, 230, 0.8)' },
           ticks: { callback: (value) => `${value}%`, maxTicksLimit: small ? 5 : 8 }
         },
@@ -227,7 +238,7 @@ const renderRiskReturnChart = (stocks) => {
             },
             label: (context) => [
               `風險機率: ${context.raw.y.toFixed(1)}%`,
-              `上週報酬: ${context.raw.x.toFixed(1)}%`,
+              `上週已實現報酬: ${context.raw.x.toFixed(1)}%`,
               `建議行動: ${context.raw.stock.action}`
             ]
           }
@@ -302,6 +313,8 @@ const renderCards = (stocks) => {
 
   grid.innerHTML = stocks.map((stock) => {
     const riskWidth = clampPercent(stock.riskProbability);
+    const forecastWeek = stock.forecastWeekRange || stock.latestWeekRange || stock.latestDate;
+    const observationWeek = stock.observationWeekRange || stock.latestWeekRange || stock.latestDate;
     const history = (stock.history || []).slice(0, 6).reverse();
     const historyBars = history.length
       ? history.map((item) => {
@@ -323,11 +336,16 @@ const renderCards = (stocks) => {
         <span class="badge ${stock.signal ? 'hedge' : 'hold'}">${stock.action}</span>
       </div>
       <div class="probability">
+        <div class="period-label forecast-label">本週預測｜${forecastWeek}</div>
         <div class="value">
           <strong class="${stock.signal ? 'danger' : ''}">${formatPercent(stock.riskProbability)}</strong>
           <span>門檻 ${formatPercent(stock.probabilityThreshold)}</span>
         </div>
         <div class="risk-track"><div class="risk-fill" style="width:${riskWidth}%"></div></div>
+      </div>
+      <div class="observed-strip">
+        <span>上週已完成｜${observationWeek}</span>
+        <strong class="${stock.weeklyReturn >= 0 ? 'positive' : 'negative'}">已實現報酬 ${formatPercent(stock.weeklyReturn, { sign: true })}</strong>
       </div>
       <div class="card-metrics">
         <div class="metric-cell">
@@ -335,12 +353,12 @@ const renderCards = (stocks) => {
           <strong class="danger">${stock.downsideThresholdText}</strong>
         </div>
         <div class="metric-cell">
-          <span>上週報酬</span>
-          <strong class="${stock.weeklyReturn >= 0 ? 'positive' : 'negative'}">${formatPercent(stock.weeklyReturn, { sign: true })}</strong>
+          <span>模型 Accuracy</span>
+          <strong>${formatPercent(stock.metrics?.accuracy)}</strong>
         </div>
         <div class="metric-cell">
-          <span>資料週次</span>
-          <strong>${stock.latestDate}</strong>
+          <span>模型 F1</span>
+          <strong>${formatPercent(stock.metrics?.f1)}</strong>
         </div>
       </div>
       <div class="history">
@@ -359,7 +377,7 @@ const renderTable = (stocks) => {
       <td data-label="風險機率" class="${stock.signal ? 'danger' : ''}">${formatPercent(stock.riskProbability)}</td>
       <td data-label="機率門檻">${formatPercent(stock.probabilityThreshold)}</td>
       <td data-label="尾部跌幅門檻" class="danger">${stock.downsideThresholdText}</td>
-      <td data-label="上週報酬" class="${stock.weeklyReturn >= 0 ? 'positive' : 'negative'}">${formatPercent(stock.weeklyReturn, { sign: true })}</td>
+      <td data-label="上週已實現報酬" class="${stock.weeklyReturn >= 0 ? 'positive' : 'negative'}">${formatPercent(stock.weeklyReturn, { sign: true })}</td>
       <td data-label="建議行動"><span class="badge ${stock.signal ? 'hedge' : 'hold'}">${stock.action}</span></td>
     </tr>
   `).join('');
