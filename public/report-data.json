@@ -1,62 +1,64 @@
 {
   "title": "台股尾部風險對沖通報",
-  "latestDate": "2026-07-17",
+  "latestDate": "2026-07-24",
+  "latestWeekRange": "2026-07-20～2026-07-24",
   "model": "XGBoost Tail Risk Model",
   "market": "^TWII",
   "stockCount": 13,
-  "hedgeCount": 10,
+  "hedgeCount": 5,
   "stocks": [
     {
       "ticker": "2330.TW",
       "name": "台積電",
-      "latestDate": "2026-07-17",
-      "riskProbability": 0.973072,
-      "probabilityThreshold": 0.785902,
-      "downsideThreshold": -0.03504,
+      "latestDate": "2026-07-24",
+      "latestWeekRange": "2026-07-20～2026-07-24",
+      "riskProbability": 0.014467,
+      "probabilityThreshold": 0.783374,
+      "downsideThreshold": -0.034961,
       "downsideThresholdText": "跌超過 3.5%",
-      "weeklyReturn": -0.05176,
-      "signal": true,
-      "action": "建議對沖",
+      "weeklyReturn": 0.026201,
+      "signal": false,
+      "action": "正常持有",
       "history": [
         {
-          "date": "2026-07-17",
-          "riskProbability": 0.973072,
+          "date": "2026-07-20～2026-07-24",
+          "riskProbability": 0.014467,
+          "weeklyReturn": 0.026201,
+          "signal": false,
+          "action": "持有"
+        },
+        {
+          "date": "2026-07-13～2026-07-17",
+          "riskProbability": 0.971224,
           "weeklyReturn": -0.05176,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-07-10",
-          "riskProbability": 0.018403,
+          "date": "2026-07-06～2026-07-10",
+          "riskProbability": 0.0228,
           "weeklyReturn": -0.01227,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-07-03",
-          "riskProbability": 0.008333,
+          "date": "2026-06-29～2026-07-03",
+          "riskProbability": 0.007472,
           "weeklyReturn": 0.044872,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-26",
-          "riskProbability": 0.217385,
+          "date": "2026-06-22～2026-06-26",
+          "riskProbability": 0.217122,
           "weeklyReturn": -0.029046,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-19",
-          "riskProbability": 0.003976,
+          "date": "2026-06-15～2026-06-19",
+          "riskProbability": 0.003823,
           "weeklyReturn": 0.04329,
-          "signal": false,
-          "action": "持有"
-        },
-        {
-          "date": "2026-06-12",
-          "riskProbability": 0.049486,
-          "weeklyReturn": -0.02065,
           "signal": false,
           "action": "持有"
         }
@@ -65,54 +67,55 @@
     {
       "ticker": "2454.TW",
       "name": "聯發科",
-      "latestDate": "2026-07-17",
-      "riskProbability": 0.976287,
-      "probabilityThreshold": 0.774397,
+      "latestDate": "2026-07-24",
+      "latestWeekRange": "2026-07-20～2026-07-24",
+      "riskProbability": 0.007473,
+      "probabilityThreshold": 0.779948,
       "downsideThreshold": -0.05,
       "downsideThresholdText": "跌超過 5.0%",
-      "weeklyReturn": -0.141401,
-      "signal": true,
-      "action": "建議對沖",
+      "weeklyReturn": 0.11276,
+      "signal": false,
+      "action": "正常持有",
       "history": [
         {
-          "date": "2026-07-17",
-          "riskProbability": 0.976287,
+          "date": "2026-07-20～2026-07-24",
+          "riskProbability": 0.007473,
+          "weeklyReturn": 0.11276,
+          "signal": false,
+          "action": "持有"
+        },
+        {
+          "date": "2026-07-13～2026-07-17",
+          "riskProbability": 0.977771,
           "weeklyReturn": -0.141401,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-07-10",
-          "riskProbability": 0.798733,
+          "date": "2026-07-06～2026-07-10",
+          "riskProbability": 0.803483,
           "weeklyReturn": -0.058772,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-07-03",
-          "riskProbability": 0.010048,
+          "date": "2026-06-29～2026-07-03",
+          "riskProbability": 0.01129,
           "weeklyReturn": 0.081186,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-26",
-          "riskProbability": 0.991725,
+          "date": "2026-06-22～2026-06-26",
+          "riskProbability": 0.991901,
           "weeklyReturn": -0.116173,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-06-19",
-          "riskProbability": 0.006809,
+          "date": "2026-06-15～2026-06-19",
+          "riskProbability": 0.007131,
           "weeklyReturn": 0.050239,
-          "signal": false,
-          "action": "持有"
-        },
-        {
-          "date": "2026-06-12",
-          "riskProbability": 0.015805,
-          "weeklyReturn": -0.027907,
           "signal": false,
           "action": "持有"
         }
@@ -121,54 +124,55 @@
     {
       "ticker": "2317.TW",
       "name": "鴻海",
-      "latestDate": "2026-07-17",
-      "riskProbability": 0.344898,
-      "probabilityThreshold": 0.833236,
-      "downsideThreshold": -0.039474,
+      "latestDate": "2026-07-24",
+      "latestWeekRange": "2026-07-20～2026-07-24",
+      "riskProbability": 0.014574,
+      "probabilityThreshold": 0.833987,
+      "downsideThreshold": -0.039444,
       "downsideThresholdText": "跌超過 3.9%",
-      "weeklyReturn": -0.014737,
+      "weeklyReturn": 0.07906,
       "signal": false,
       "action": "正常持有",
       "history": [
         {
-          "date": "2026-07-17",
-          "riskProbability": 0.344898,
+          "date": "2026-07-20～2026-07-24",
+          "riskProbability": 0.014574,
+          "weeklyReturn": 0.07906,
+          "signal": false,
+          "action": "持有"
+        },
+        {
+          "date": "2026-07-13～2026-07-17",
+          "riskProbability": 0.426674,
           "weeklyReturn": -0.014737,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-07-10",
-          "riskProbability": 0.244724,
+          "date": "2026-07-06～2026-07-10",
+          "riskProbability": 0.239418,
           "weeklyReturn": -0.012474,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-07-03",
-          "riskProbability": 0.269088,
+          "date": "2026-06-29～2026-07-03",
+          "riskProbability": 0.23457,
           "weeklyReturn": -0.003372,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-26",
-          "riskProbability": 0.961689,
+          "date": "2026-06-22～2026-06-26",
+          "riskProbability": 0.960999,
           "weeklyReturn": -0.074488,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-06-19",
-          "riskProbability": 0.020526,
+          "date": "2026-06-15～2026-06-19",
+          "riskProbability": 0.027123,
           "weeklyReturn": 0.03071,
-          "signal": false,
-          "action": "持有"
-        },
-        {
-          "date": "2026-06-12",
-          "riskProbability": 0.42854,
-          "weeklyReturn": -0.084358,
           "signal": false,
           "action": "持有"
         }
@@ -177,54 +181,55 @@
     {
       "ticker": "3711.TW",
       "name": "日月光",
-      "latestDate": "2026-07-17",
-      "riskProbability": 0.98106,
-      "probabilityThreshold": 0.728649,
-      "downsideThreshold": -0.046541,
+      "latestDate": "2026-07-24",
+      "latestWeekRange": "2026-07-20～2026-07-24",
+      "riskProbability": 0.347088,
+      "probabilityThreshold": 0.711855,
+      "downsideThreshold": -0.046512,
       "downsideThresholdText": "跌超過 4.7%",
-      "weeklyReturn": -0.093058,
-      "signal": true,
-      "action": "建議對沖",
+      "weeklyReturn": -0.001629,
+      "signal": false,
+      "action": "正常持有",
       "history": [
         {
-          "date": "2026-07-17",
-          "riskProbability": 0.98106,
+          "date": "2026-07-20～2026-07-24",
+          "riskProbability": 0.347088,
+          "weeklyReturn": -0.001629,
+          "signal": false,
+          "action": "持有"
+        },
+        {
+          "date": "2026-07-13～2026-07-17",
+          "riskProbability": 0.980582,
           "weeklyReturn": -0.093058,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-07-10",
-          "riskProbability": 0.021448,
+          "date": "2026-07-06～2026-07-10",
+          "riskProbability": 0.022905,
           "weeklyReturn": -0.007331,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-07-03",
-          "riskProbability": 0.003491,
+          "date": "2026-06-29～2026-07-03",
+          "riskProbability": 0.003643,
           "weeklyReturn": 0.088977,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-26",
-          "riskProbability": 0.010335,
+          "date": "2026-06-22～2026-06-26",
+          "riskProbability": 0.010694,
           "weeklyReturn": 0.030995,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-19",
-          "riskProbability": 0.008161,
+          "date": "2026-06-15～2026-06-19",
+          "riskProbability": 0.009005,
           "weeklyReturn": 0.038983,
-          "signal": false,
-          "action": "持有"
-        },
-        {
-          "date": "2026-06-12",
-          "riskProbability": 0.013537,
-          "weeklyReturn": 0.02253,
           "signal": false,
           "action": "持有"
         }
@@ -233,54 +238,55 @@
     {
       "ticker": "2303.TW",
       "name": "聯電",
-      "latestDate": "2026-07-17",
-      "riskProbability": 0.913712,
-      "probabilityThreshold": 0.53557,
-      "downsideThreshold": -0.044872,
+      "latestDate": "2026-07-24",
+      "latestWeekRange": "2026-07-20～2026-07-24",
+      "riskProbability": 0.929134,
+      "probabilityThreshold": 0.657869,
+      "downsideThreshold": -0.04482,
       "downsideThresholdText": "跌超過 4.5%",
-      "weeklyReturn": -0.076923,
+      "weeklyReturn": -0.111111,
       "signal": true,
       "action": "建議對沖",
       "history": [
         {
-          "date": "2026-07-17",
-          "riskProbability": 0.913712,
+          "date": "2026-07-20～2026-07-24",
+          "riskProbability": 0.929134,
+          "weeklyReturn": -0.111111,
+          "signal": true,
+          "action": "對沖"
+        },
+        {
+          "date": "2026-07-13～2026-07-17",
+          "riskProbability": 0.924948,
           "weeklyReturn": -0.076923,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-07-10",
-          "riskProbability": 0.588927,
+          "date": "2026-07-06～2026-07-10",
+          "riskProbability": 0.710795,
           "weeklyReturn": -0.069385,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-07-03",
-          "riskProbability": 0.086949,
+          "date": "2026-06-29～2026-07-03",
+          "riskProbability": 0.087853,
           "weeklyReturn": 0.039634,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-26",
-          "riskProbability": 0.091996,
+          "date": "2026-06-22～2026-06-26",
+          "riskProbability": 0.089464,
           "weeklyReturn": 0.127148,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-19",
-          "riskProbability": 0.036868,
+          "date": "2026-06-15～2026-06-19",
+          "riskProbability": 0.030984,
           "weeklyReturn": 0.089888,
-          "signal": false,
-          "action": "持有"
-        },
-        {
-          "date": "2026-06-12",
-          "riskProbability": 0.133169,
-          "weeklyReturn": 0.015209,
           "signal": false,
           "action": "持有"
         }
@@ -289,54 +295,55 @@
     {
       "ticker": "2308.TW",
       "name": "台達電",
-      "latestDate": "2026-07-17",
-      "riskProbability": 0.929846,
-      "probabilityThreshold": 0.617676,
-      "downsideThreshold": -0.046154,
+      "latestDate": "2026-07-24",
+      "latestWeekRange": "2026-07-20～2026-07-24",
+      "riskProbability": 0.085067,
+      "probabilityThreshold": 0.707121,
+      "downsideThreshold": -0.046148,
       "downsideThresholdText": "跌超過 4.6%",
-      "weeklyReturn": -0.074468,
-      "signal": true,
-      "action": "建議對沖",
+      "weeklyReturn": 0.025862,
+      "signal": false,
+      "action": "正常持有",
       "history": [
         {
-          "date": "2026-07-17",
-          "riskProbability": 0.929846,
+          "date": "2026-07-20～2026-07-24",
+          "riskProbability": 0.085067,
+          "weeklyReturn": 0.025862,
+          "signal": false,
+          "action": "持有"
+        },
+        {
+          "date": "2026-07-13～2026-07-17",
+          "riskProbability": 0.941905,
           "weeklyReturn": -0.074468,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-07-10",
-          "riskProbability": 0.713387,
+          "date": "2026-07-06～2026-07-10",
+          "riskProbability": 0.706574,
           "weeklyReturn": -0.093976,
-          "signal": true,
-          "action": "對沖"
+          "signal": false,
+          "action": "持有"
         },
         {
-          "date": "2026-07-03",
-          "riskProbability": 0.021154,
+          "date": "2026-06-29～2026-07-03",
+          "riskProbability": 0.020624,
           "weeklyReturn": 0.146409,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-26",
-          "riskProbability": 0.954928,
+          "date": "2026-06-22～2026-06-26",
+          "riskProbability": 0.956799,
           "weeklyReturn": -0.15814,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-06-19",
-          "riskProbability": 0.204829,
+          "date": "2026-06-15～2026-06-19",
+          "riskProbability": 0.172737,
           "weeklyReturn": -0.02427,
-          "signal": false,
-          "action": "持有"
-        },
-        {
-          "date": "2026-06-12",
-          "riskProbability": 0.316689,
-          "weeklyReturn": -0.036957,
           "signal": false,
           "action": "持有"
         }
@@ -345,54 +352,55 @@
     {
       "ticker": "2383.TW",
       "name": "台光電",
-      "latestDate": "2026-07-17",
-      "riskProbability": 0.943056,
-      "probabilityThreshold": 0.815766,
-      "downsideThreshold": -0.054016,
+      "latestDate": "2026-07-24",
+      "latestWeekRange": "2026-07-20～2026-07-24",
+      "riskProbability": 0.096338,
+      "probabilityThreshold": 0.812481,
+      "downsideThreshold": -0.054254,
       "downsideThresholdText": "跌超過 5.4%",
-      "weeklyReturn": -0.151086,
-      "signal": true,
-      "action": "建議對沖",
+      "weeklyReturn": 0.057842,
+      "signal": false,
+      "action": "正常持有",
       "history": [
         {
-          "date": "2026-07-17",
-          "riskProbability": 0.943056,
+          "date": "2026-07-20～2026-07-24",
+          "riskProbability": 0.096338,
+          "weeklyReturn": 0.057842,
+          "signal": false,
+          "action": "持有"
+        },
+        {
+          "date": "2026-07-13～2026-07-17",
+          "riskProbability": 0.945489,
           "weeklyReturn": -0.151086,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-07-10",
-          "riskProbability": 0.91811,
+          "date": "2026-07-06～2026-07-10",
+          "riskProbability": 0.91245,
           "weeklyReturn": -0.129112,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-07-03",
-          "riskProbability": 0.00778,
+          "date": "2026-06-29～2026-07-03",
+          "riskProbability": 0.007758,
           "weeklyReturn": 0.156993,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-26",
-          "riskProbability": 0.058701,
+          "date": "2026-06-22～2026-06-26",
+          "riskProbability": 0.070199,
           "weeklyReturn": -0.061607,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-19",
-          "riskProbability": 0.006093,
+          "date": "2026-06-15～2026-06-19",
+          "riskProbability": 0.005735,
           "weeklyReturn": 0.15942,
-          "signal": false,
-          "action": "持有"
-        },
-        {
-          "date": "2026-06-12",
-          "riskProbability": 0.041665,
-          "weeklyReturn": -0.011259,
           "signal": false,
           "action": "持有"
         }
@@ -401,54 +409,55 @@
     {
       "ticker": "2327.TW",
       "name": "國巨",
-      "latestDate": "2026-07-17",
-      "riskProbability": 0.97373,
-      "probabilityThreshold": 0.623312,
-      "downsideThreshold": -0.054555,
+      "latestDate": "2026-07-24",
+      "latestWeekRange": "2026-07-20～2026-07-24",
+      "riskProbability": 0.903244,
+      "probabilityThreshold": 0.634059,
+      "downsideThreshold": -0.054999,
       "downsideThresholdText": "跌超過 5.5%",
-      "weeklyReturn": -0.223333,
+      "weeklyReturn": -0.081545,
       "signal": true,
       "action": "建議對沖",
       "history": [
         {
-          "date": "2026-07-17",
-          "riskProbability": 0.97373,
+          "date": "2026-07-20～2026-07-24",
+          "riskProbability": 0.903244,
+          "weeklyReturn": -0.081545,
+          "signal": true,
+          "action": "對沖"
+        },
+        {
+          "date": "2026-07-13～2026-07-17",
+          "riskProbability": 0.968657,
           "weeklyReturn": -0.223333,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-07-10",
-          "riskProbability": 0.816837,
+          "date": "2026-07-06～2026-07-10",
+          "riskProbability": 0.872983,
           "weeklyReturn": -0.138756,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-07-03",
-          "riskProbability": 0.018465,
+          "date": "2026-06-29～2026-07-03",
+          "riskProbability": 0.016675,
           "weeklyReturn": 0.029557,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-26",
-          "riskProbability": 0.083546,
+          "date": "2026-06-22～2026-06-26",
+          "riskProbability": 0.074433,
           "weeklyReturn": -0.060185,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-19",
-          "riskProbability": 0.040464,
+          "date": "2026-06-15～2026-06-19",
+          "riskProbability": 0.040461,
           "weeklyReturn": 0.263158,
-          "signal": false,
-          "action": "持有"
-        },
-        {
-          "date": "2026-06-12",
-          "riskProbability": 0.065351,
-          "weeklyReturn": 0.119811,
           "signal": false,
           "action": "持有"
         }
@@ -457,54 +466,55 @@
     {
       "ticker": "1303.TW",
       "name": "南亞",
-      "latestDate": "2026-07-17",
-      "riskProbability": 0.023832,
-      "probabilityThreshold": 0.83795,
-      "downsideThreshold": -0.034173,
+      "latestDate": "2026-07-24",
+      "latestWeekRange": "2026-07-20～2026-07-24",
+      "riskProbability": 0.9146,
+      "probabilityThreshold": 0.855907,
+      "downsideThreshold": -0.034151,
       "downsideThresholdText": "跌超過 3.4%",
-      "weeklyReturn": 0.096419,
-      "signal": false,
-      "action": "正常持有",
+      "weeklyReturn": -0.10804,
+      "signal": true,
+      "action": "建議對沖",
       "history": [
         {
-          "date": "2026-07-17",
-          "riskProbability": 0.023832,
+          "date": "2026-07-20～2026-07-24",
+          "riskProbability": 0.9146,
+          "weeklyReturn": -0.10804,
+          "signal": true,
+          "action": "對沖"
+        },
+        {
+          "date": "2026-07-13～2026-07-17",
+          "riskProbability": 0.027355,
           "weeklyReturn": 0.096419,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-07-10",
-          "riskProbability": 0.143422,
+          "date": "2026-07-06～2026-07-10",
+          "riskProbability": 0.108543,
           "weeklyReturn": -0.074232,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-07-03",
-          "riskProbability": 0.12787,
+          "date": "2026-06-29～2026-07-03",
+          "riskProbability": 0.105382,
           "weeklyReturn": 0.331081,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-26",
-          "riskProbability": 0.118396,
+          "date": "2026-06-22～2026-06-26",
+          "riskProbability": 0.101953,
           "weeklyReturn": 0.064748,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-19",
-          "riskProbability": 0.031856,
+          "date": "2026-06-15～2026-06-19",
+          "riskProbability": 0.029146,
           "weeklyReturn": 0.305164,
-          "signal": false,
-          "action": "持有"
-        },
-        {
-          "date": "2026-06-12",
-          "riskProbability": 0.110002,
-          "weeklyReturn": 0.019139,
           "signal": false,
           "action": "持有"
         }
@@ -513,54 +523,55 @@
     {
       "ticker": "2881.TW",
       "name": "富邦金",
-      "latestDate": "2026-07-17",
-      "riskProbability": 0.085085,
-      "probabilityThreshold": 0.655446,
-      "downsideThreshold": -0.033926,
+      "latestDate": "2026-07-24",
+      "latestWeekRange": "2026-07-20～2026-07-24",
+      "riskProbability": 0.018646,
+      "probabilityThreshold": 0.678157,
+      "downsideThreshold": -0.033921,
       "downsideThresholdText": "跌超過 3.4%",
-      "weeklyReturn": 0.0,
+      "weeklyReturn": 0.024096,
       "signal": false,
       "action": "正常持有",
       "history": [
         {
-          "date": "2026-07-17",
-          "riskProbability": 0.085085,
+          "date": "2026-07-20～2026-07-24",
+          "riskProbability": 0.018646,
+          "weeklyReturn": 0.024096,
+          "signal": false,
+          "action": "持有"
+        },
+        {
+          "date": "2026-07-13～2026-07-17",
+          "riskProbability": 0.086781,
           "weeklyReturn": 0.0,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-07-10",
-          "riskProbability": 0.076566,
+          "date": "2026-07-06～2026-07-10",
+          "riskProbability": 0.075938,
           "weeklyReturn": 0.028926,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-07-03",
-          "riskProbability": 0.534086,
+          "date": "2026-06-29～2026-07-03",
+          "riskProbability": 0.633025,
           "weeklyReturn": -0.066375,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-26",
-          "riskProbability": 0.131808,
+          "date": "2026-06-22～2026-06-26",
+          "riskProbability": 0.123182,
           "weeklyReturn": -0.028986,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-19",
-          "riskProbability": 0.103541,
+          "date": "2026-06-15～2026-06-19",
+          "riskProbability": 0.101939,
           "weeklyReturn": 0.131148,
-          "signal": false,
-          "action": "持有"
-        },
-        {
-          "date": "2026-06-12",
-          "riskProbability": 0.247101,
-          "weeklyReturn": 0.033898,
           "signal": false,
           "action": "持有"
         }
@@ -569,54 +580,55 @@
     {
       "ticker": "3037.TW",
       "name": "欣興",
-      "latestDate": "2026-07-17",
-      "riskProbability": 0.923914,
-      "probabilityThreshold": 0.788175,
-      "downsideThreshold": -0.061224,
+      "latestDate": "2026-07-24",
+      "latestWeekRange": "2026-07-20～2026-07-24",
+      "riskProbability": 0.008738,
+      "probabilityThreshold": 0.815595,
+      "downsideThreshold": -0.061195,
       "downsideThresholdText": "跌超過 6.1%",
-      "weeklyReturn": -0.092571,
-      "signal": true,
-      "action": "建議對沖",
+      "weeklyReturn": 0.056675,
+      "signal": false,
+      "action": "正常持有",
       "history": [
         {
-          "date": "2026-07-17",
-          "riskProbability": 0.923914,
+          "date": "2026-07-20～2026-07-24",
+          "riskProbability": 0.008738,
+          "weeklyReturn": 0.056675,
+          "signal": false,
+          "action": "持有"
+        },
+        {
+          "date": "2026-07-13～2026-07-17",
+          "riskProbability": 0.904641,
           "weeklyReturn": -0.092571,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-07-10",
-          "riskProbability": 0.945085,
+          "date": "2026-07-06～2026-07-10",
+          "riskProbability": 0.933179,
           "weeklyReturn": -0.095158,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-07-03",
-          "riskProbability": 0.011293,
+          "date": "2026-06-29～2026-07-03",
+          "riskProbability": 0.012107,
           "weeklyReturn": -0.006154,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-26",
-          "riskProbability": 0.070227,
+          "date": "2026-06-22～2026-06-26",
+          "riskProbability": 0.078471,
           "weeklyReturn": 0.007231,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-19",
-          "riskProbability": 0.016251,
+          "date": "2026-06-15～2026-06-19",
+          "riskProbability": 0.014697,
           "weeklyReturn": 0.073171,
-          "signal": false,
-          "action": "持有"
-        },
-        {
-          "date": "2026-06-12",
-          "riskProbability": 0.534574,
-          "weeklyReturn": -0.033226,
           "signal": false,
           "action": "持有"
         }
@@ -625,110 +637,112 @@
     {
       "ticker": "2409.TW",
       "name": "友達",
-      "latestDate": "2026-07-17",
-      "riskProbability": 0.991329,
-      "probabilityThreshold": 0.734257,
-      "downsideThreshold": -0.058596,
+      "latestDate": "2026-07-24",
+      "latestWeekRange": "2026-07-20～2026-07-24",
+      "riskProbability": 0.928393,
+      "probabilityThreshold": 0.748748,
+      "downsideThreshold": -0.058594,
       "downsideThresholdText": "跌超過 5.9%",
-      "weeklyReturn": -0.17965,
+      "weeklyReturn": -0.011628,
       "signal": true,
       "action": "建議對沖",
       "history": [
         {
-          "date": "2026-07-17",
-          "riskProbability": 0.991329,
+          "date": "2026-07-20～2026-07-24",
+          "riskProbability": 0.928393,
+          "weeklyReturn": -0.011628,
+          "signal": true,
+          "action": "對沖"
+        },
+        {
+          "date": "2026-07-13～2026-07-17",
+          "riskProbability": 0.992075,
           "weeklyReturn": -0.17965,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-07-10",
-          "riskProbability": 0.015604,
+          "date": "2026-07-06～2026-07-10",
+          "riskProbability": 0.016385,
           "weeklyReturn": 0.048333,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-07-03",
-          "riskProbability": 0.029351,
+          "date": "2026-06-29～2026-07-03",
+          "riskProbability": 0.02982,
           "weeklyReturn": 0.073345,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-26",
-          "riskProbability": 0.015883,
+          "date": "2026-06-22～2026-06-26",
+          "riskProbability": 0.017776,
           "weeklyReturn": -0.007105,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-19",
-          "riskProbability": 0.016088,
+          "date": "2026-06-15～2026-06-19",
+          "riskProbability": 0.013479,
           "weeklyReturn": 0.197872,
           "signal": false,
           "action": "持有"
-        },
-        {
-          "date": "2026-06-12",
-          "riskProbability": 0.81102,
-          "weeklyReturn": -0.132841,
-          "signal": true,
-          "action": "對沖"
         }
       ]
     },
     {
       "ticker": "3481.TW",
       "name": "群創",
-      "latestDate": "2026-07-17",
-      "riskProbability": 0.98309,
-      "probabilityThreshold": 0.697165,
-      "downsideThreshold": -0.064672,
+      "latestDate": "2026-07-24",
+      "latestWeekRange": "2026-07-20～2026-07-24",
+      "riskProbability": 0.874782,
+      "probabilityThreshold": 0.707793,
+      "downsideThreshold": -0.064543,
       "downsideThresholdText": "跌超過 6.5%",
-      "weeklyReturn": -0.194487,
+      "weeklyReturn": -0.058935,
       "signal": true,
       "action": "建議對沖",
       "history": [
         {
-          "date": "2026-07-17",
-          "riskProbability": 0.98309,
+          "date": "2026-07-20～2026-07-24",
+          "riskProbability": 0.874782,
+          "weeklyReturn": -0.058935,
+          "signal": true,
+          "action": "對沖"
+        },
+        {
+          "date": "2026-07-13～2026-07-17",
+          "riskProbability": 0.985712,
           "weeklyReturn": -0.194487,
           "signal": true,
           "action": "對沖"
         },
         {
-          "date": "2026-07-10",
-          "riskProbability": 0.01482,
+          "date": "2026-07-06～2026-07-10",
+          "riskProbability": 0.014935,
           "weeklyReturn": -0.010606,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-07-03",
-          "riskProbability": 0.013353,
+          "date": "2026-06-29～2026-07-03",
+          "riskProbability": 0.011902,
           "weeklyReturn": 0.015385,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-26",
-          "riskProbability": 0.028492,
+          "date": "2026-06-22～2026-06-26",
+          "riskProbability": 0.024875,
           "weeklyReturn": 0.009317,
           "signal": false,
           "action": "持有"
         },
         {
-          "date": "2026-06-19",
-          "riskProbability": 0.007212,
+          "date": "2026-06-15～2026-06-19",
+          "riskProbability": 0.006275,
           "weeklyReturn": 0.326468,
-          "signal": false,
-          "action": "持有"
-        },
-        {
-          "date": "2026-06-12",
-          "riskProbability": 0.024612,
-          "weeklyReturn": -0.075023,
           "signal": false,
           "action": "持有"
         }
