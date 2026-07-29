@@ -33,7 +33,7 @@ def render_report(r: ForecastResult, c: Config) -> str:
 - 尾部事件機率：**{r.probability:.1%}**
 - 機率警示門檻：{c.probability_threshold:.0%}
 - 歷史最佳對沖門檻：{r.hedge_threshold:.0%}
-- 最差 20% 報酬門檻：{r.tail_threshold:.2%}
+- 最差 10% 報酬門檻：{r.tail_threshold:.2%}
 - 訓練樣本／尾部樣本：{r.training_rows}／{r.positive_rows}
 
 | Walk-forward 指標 | 數值 |
@@ -130,7 +130,7 @@ def render_email_html(r: ForecastResult, c: Config) -> str:
         <div style="padding:18px;border-radius:12px;background:{status_bg};border-left:5px solid {status_color}">
           <div style="font-size:14px;color:{status_color};font-weight:700">{status}</div>
           <div style="margin-top:4px;font-size:38px;line-height:1.1;font-weight:800;color:{status_color}">{r.probability:.1%}</div>
-          <div style="margin-top:6px;font-size:13px;color:#475467">模型估計下一週落入歷史最差 20% 的機率</div>
+          <div style="margin-top:6px;font-size:13px;color:#475467">模型估計下一週落入歷史最差 10% 的機率</div>
         </div>
         <table role="presentation" style="width:100%;margin:20px 0;border-collapse:separate;border-spacing:8px">
           <tr>
@@ -139,7 +139,7 @@ def render_email_html(r: ForecastResult, c: Config) -> str:
               <div style="margin-top:4px;font-size:20px;font-weight:700">{c.probability_threshold:.0%}</div>
             </td>
             <td style="width:50%;padding:14px;background:#f9fafb;border-radius:10px">
-              <div style="font-size:12px;color:#667085">最差 20% 報酬門檻</div>
+              <div style="font-size:12px;color:#667085">最差 10% 報酬門檻</div>
               <div style="margin-top:4px;font-size:20px;font-weight:700">{r.tail_threshold:.2%}</div>
             </td>
           </tr>
