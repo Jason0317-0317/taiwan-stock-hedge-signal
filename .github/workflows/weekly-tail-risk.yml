@@ -1,0 +1,37 @@
+name: Weekly TSMC tail-risk forecast
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 1 * * 6"
+
+permissions:
+  contents: read
+
+jobs:
+  forecast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: pytest
+      - name: Generate forecast and optionally email it
+        run: python -m tailrisk
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tsmc-tail-risk-${{ github.run_number }}
+          path: artifacts/
+          retention-days: 90
