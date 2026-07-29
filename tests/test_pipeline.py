@@ -28,6 +28,7 @@ def test_training_probability_is_bounded():
     result = train_and_forecast(frame, Config())
     assert 0 <= result.probability <= 1
     assert result.training_rows == rows - 1
+    assert 75 <= result.positive_rows <= 90
     assert .05 <= result.hedge_threshold <= 1
     assert "net_benefit" in result.hedge_stats
     assert len(result.recent_results) == 10
