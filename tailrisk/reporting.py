@@ -11,6 +11,13 @@ def render_report(r: ForecastResult, c: Config) -> str:
     hedge = "建議對沖" if r.hedge_recommended else "暫不對沖"
     m = r.metrics
     h = r.hedge_stats
+    recent_rows = "\n".join(
+        f"| {row['as_of']} | {row['probability']:.1%} | "
+        f"{'對沖' if row['hedge_recommended'] else '不對沖'} | "
+        f"{row['actual_return']:.2%} | {'是' if row['actual_tail'] else '否'} | "
+        f"{row['hedge_net_result']:.2%} | {row['outcome']} |"
+        for row in r.recent_results
+    )
     return f"""# 台積電下一週尾部風險預測
 
 - 資料截止日：{r.as_of}
@@ -47,6 +54,14 @@ def render_report(r: ForecastResult, c: Config) -> str:
 | 回測淨效益 | {h['net_benefit']:.2%} |
 | 每次對沖平均淨效益 | {h['average_net_per_hedge']:.2%} |
 
+## 最近 10 週建議與實際結果
+
+此表使用 walk-forward 歷史機率，對沖建議依目前量化門檻回溯套用。
+
+| 預測基準日 | 尾部機率 | 建議 | 下一週報酬 | 實際尾部 | 對沖淨結果 | 結果 |
+|---|---:|---|---:|---|---:|---|
+{recent_rows}
+
 僅供研究與教育用途，不構成投資建議。
 """
 
@@ -74,6 +89,17 @@ def render_email_html(r: ForecastResult, c: Config) -> str:
           <td style="padding:10px 12px;border-bottom:1px solid #eaecf0;color:#667085">{note}</td>
         </tr>"""
         for name, value, note in rows
+    )
+    history_rows = "".join(
+        f"""<tr>
+          <td style="padding:9px 7px;border-bottom:1px solid #eaecf0">{row['as_of'][5:]}</td>
+          <td style="padding:9px 7px;border-bottom:1px solid #eaecf0;text-align:right">{row['probability']:.1%}</td>
+          <td style="padding:9px 7px;border-bottom:1px solid #eaecf0;font-weight:700">{'對沖' if row['hedge_recommended'] else '不對沖'}</td>
+          <td style="padding:9px 7px;border-bottom:1px solid #eaecf0;text-align:right;color:{'#b42318' if row['actual_return'] < 0 else '#067647'}">{row['actual_return']:.2%}</td>
+          <td style="padding:9px 7px;border-bottom:1px solid #eaecf0">{'是' if row['actual_tail'] else '否'}</td>
+          <td style="padding:9px 7px;border-bottom:1px solid #eaecf0">{row['outcome']}</td>
+        </tr>"""
+        for row in r.recent_results
     )
     return f"""<!doctype html>
 <html lang="zh-Hant">
@@ -128,6 +154,21 @@ def render_email_html(r: ForecastResult, c: Config) -> str:
           歷史觸發 {h['hedge_weeks']:.0f} 週（{h['hedge_rate']:.1%}），捕捉 {h['tail_capture_rate']:.1%} 尾部事件。
           毛損失減少 {h['gross_loss_avoided']:.2%}，扣除成本 {h['total_hedge_cost']:.2%} 後，
           回測淨效益為 <strong>{h['net_benefit']:.2%}</strong>。
+        </div>
+        <h2 style="margin:26px 0 6px;font-size:18px">最近 10 週建議與實際結果</h2>
+        <div style="margin-bottom:12px;font-size:12px;color:#667085">Walk-forward 歷史機率；建議依目前量化門檻回溯套用。</div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;min-width:560px;border-collapse:collapse;border:1px solid #eaecf0;font-size:12px">
+            <thead><tr style="background:#f9fafb">
+              <th style="padding:9px 7px;text-align:left">日期</th>
+              <th style="padding:9px 7px;text-align:right">機率</th>
+              <th style="padding:9px 7px;text-align:left">建議</th>
+              <th style="padding:9px 7px;text-align:right">實際報酬</th>
+              <th style="padding:9px 7px;text-align:left">尾部</th>
+              <th style="padding:9px 7px;text-align:left">結果</th>
+            </tr></thead>
+            <tbody>{history_rows}</tbody>
+          </table>
         </div>
         <p style="margin:22px 0 0;font-size:12px;line-height:1.6;color:#667085">
           本報告由統計模型自動產生，僅供研究與教育用途，不構成投資建議。
