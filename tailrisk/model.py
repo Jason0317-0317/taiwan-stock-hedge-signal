@@ -25,6 +25,7 @@ class ForecastResult:
     positive_rows: int
     metrics: dict[str, float]
     hedge_stats: dict[str, float]
+    recent_results: list[dict]
 
 
 def make_model(config):
@@ -89,6 +90,30 @@ def train_and_forecast(frame: pd.DataFrame, config: Config) -> ForecastResult:
         "net_benefit": total_net,
         "average_net_per_hedge": float(hedge_net[historical_hedge].mean()) if historical_hedge.any() else 0.0,
     }
+    recent_results = []
+    recent_index = np.flatnonzero(valid.to_numpy())[-10:]
+    for position in recent_index:
+        probability_at_time = float(probabilities.iloc[position])
+        actual_return = float(labelled["forward_return_1w"].iloc[position])
+        actual_tail = bool(labels.iloc[position])
+        recommended = bool(probability_at_time >= hedge_threshold and total_net > 0)
+        net_result = (
+            config.hedge_effectiveness * max(-actual_return, 0) - config.weekly_hedge_cost
+            if recommended else 0.0
+        )
+        if recommended:
+            outcome = "對沖有利" if net_result > 0 else "支付成本"
+        else:
+            outcome = "漏掉尾部" if actual_tail else "未對沖"
+        recent_results.append({
+            "as_of": labelled.index[position].date().isoformat(),
+            "probability": probability_at_time,
+            "hedge_recommended": recommended,
+            "actual_return": actual_return,
+            "actual_tail": actual_tail,
+            "hedge_net_result": float(net_result),
+            "outcome": outcome,
+        })
     threshold = float(labelled.forward_return_1w.quantile(config.tail_quantile))
     final_y = (labelled.forward_return_1w <= threshold).astype(int)
     probability = float(make_model(config).fit(labelled[FEATURE_COLUMNS], final_y).predict_proba(latest[FEATURE_COLUMNS])[0, 1])
@@ -103,4 +128,5 @@ def train_and_forecast(frame: pd.DataFrame, config: Config) -> ForecastResult:
         positive_rows=int(final_y.sum()),
         metrics=metrics,
         hedge_stats=hedge_stats,
+        recent_results=recent_results,
     )
