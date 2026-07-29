@@ -6,7 +6,7 @@ class Config:
     ticker: str = "2330.TW"
     benchmark: str = "^TWII"
     years: int = 20
-    tail_quantile: float = 0.20
+    tail_quantile: float = 0.10
     probability_threshold: float = 0.35
     weekly_hedge_cost: float = 0.005
     hedge_effectiveness: float = 0.70
