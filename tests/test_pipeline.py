@@ -6,6 +6,7 @@ from tailrisk.config import Config
 from tailrisk.data import download_market_data
 from tailrisk.features import FEATURE_COLUMNS, build_features
 from tailrisk.model import train_and_forecast
+from tailrisk.reporting import render_email_html
 
 
 def test_features_and_forward_target():
@@ -37,3 +38,17 @@ def test_download_excludes_incomplete_future_week(monkeypatch):
     config = Config(min_training_weeks=-51)
     weekly = download_market_data(config)
     assert weekly.index.max() <= index.max()
+
+
+def test_html_email_contains_scores():
+    rng, rows = np.random.default_rng(7), 420
+    frame = pd.DataFrame(rng.normal(0, .02, (rows, len(FEATURE_COLUMNS))),
+                         columns=FEATURE_COLUMNS, index=pd.date_range("2015-01-02", periods=rows, freq="W-FRI"))
+    frame["forward_return_1w"] = rng.normal(.002, .035, rows)
+    frame.loc[frame.index[-1], "forward_return_1w"] = np.nan
+    result = train_and_forecast(frame, Config())
+    html = render_email_html(result, Config())
+    assert "<html" in html
+    assert "PR-AUC" in html
+    assert "Brier score" in html
+    assert f"{result.probability:.1%}" in html
