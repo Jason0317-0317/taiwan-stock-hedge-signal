@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import timedelta
 
 import numpy as np
 import pandas as pd
@@ -93,6 +94,8 @@ def train_and_forecast(frame: pd.DataFrame, config: Config) -> ForecastResult:
     recent_results = []
     recent_index = np.flatnonzero(valid.to_numpy())[-10:]
     for position in recent_index:
+        week_end = labelled.index[position]
+        week_start = week_end - timedelta(days=4)
         probability_at_time = float(probabilities.iloc[position])
         actual_return = float(labelled["forward_return_1w"].iloc[position])
         actual_tail = bool(labels.iloc[position])
@@ -107,6 +110,8 @@ def train_and_forecast(frame: pd.DataFrame, config: Config) -> ForecastResult:
             outcome = "漏掉尾部" if actual_tail else "未對沖"
         recent_results.append({
             "as_of": labelled.index[position].date().isoformat(),
+            "week_start": week_start.date().isoformat(),
+            "week_end": week_end.date().isoformat(),
             "probability": probability_at_time,
             "hedge_recommended": recommended,
             "actual_return": actual_return,

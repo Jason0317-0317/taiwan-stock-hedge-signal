@@ -31,7 +31,8 @@ def test_training_probability_is_bounded():
     assert .05 <= result.hedge_threshold <= 1
     assert "net_benefit" in result.hedge_stats
     assert len(result.recent_results) == 10
-    assert {"as_of", "probability", "hedge_recommended", "actual_return", "actual_tail", "outcome"} <= result.recent_results[-1].keys()
+    assert {"as_of", "week_start", "week_end", "probability", "hedge_recommended", "actual_return", "actual_tail", "outcome"} <= result.recent_results[-1].keys()
+    assert (pd.Timestamp(result.recent_results[-1]["week_end"]) - pd.Timestamp(result.recent_results[-1]["week_start"])).days == 4
 
 
 def test_download_excludes_incomplete_future_week(monkeypatch):
@@ -58,5 +59,6 @@ def test_html_email_contains_scores():
     assert "量化對沖決策" in html
     assert "回測淨效益" in html
     assert "最近 10 週建議與實際結果" in html
-    assert result.recent_results[-1]["as_of"][5:] in html
+    assert result.recent_results[-1]["week_start"][5:] in html
+    assert result.recent_results[-1]["week_end"][5:] in html
     assert f"{result.probability:.1%}" in html
