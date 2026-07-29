@@ -28,14 +28,11 @@ pytest
 
 ## 每週自動化
 
-GitHub Actions 於每週六台北時間 09:00 執行，也支援手動觸發。設定以下 Repository Secrets 後會寄出報告：
+GitHub Actions 於每週六台北時間 09:00 執行，也支援手動觸發。郵件正文包含當週預測與完整模型評分表。設定以下 Repository Secrets 後會透過 Gmail SMTP 寄出報告：
 
-- `SMTP_HOST`
-- `SMTP_PORT`（例如 `587`）
-- `SMTP_USERNAME`
-- `SMTP_PASSWORD`（Gmail 建議使用 App Password）
-- `EMAIL_FROM`
-- `EMAIL_TO`
+- `SENDER_EMAIL`
+- `SENDER_PASSWORD`（Gmail App Password）
+- `RECEIVER_EMAIL`
 
 未設定郵件 Secrets 時，預測仍會執行並保存 workflow artifact。
 

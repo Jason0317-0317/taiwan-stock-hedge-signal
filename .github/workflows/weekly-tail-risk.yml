@@ -23,12 +23,12 @@ jobs:
       - name: Generate forecast and optionally email it
         run: python -m tailrisk
         env:
-          SMTP_HOST: ${{ secrets.SMTP_HOST }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
-          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          SMTP_HOST: smtp.gmail.com
+          SMTP_PORT: "587"
+          SMTP_USERNAME: ${{ secrets.SENDER_EMAIL }}
+          SMTP_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
+          EMAIL_FROM: ${{ secrets.SENDER_EMAIL }}
+          EMAIL_TO: ${{ secrets.RECEIVER_EMAIL }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
