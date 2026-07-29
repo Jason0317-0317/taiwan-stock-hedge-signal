@@ -8,13 +8,17 @@ from .model import ForecastResult
 
 def render_report(r: ForecastResult, c: Config) -> str:
     status = "高風險警示" if r.signal else "未觸發警示"
+    hedge = "建議對沖" if r.hedge_recommended else "暫不對沖"
     m = r.metrics
+    h = r.hedge_stats
     return f"""# 台積電下一週尾部風險預測
 
 - 資料截止日：{r.as_of}
 - 狀態：**{status}**
+- 對沖決策：**{hedge}**
 - 尾部事件機率：**{r.probability:.1%}**
 - 警示門檻：{c.probability_threshold:.0%}
+- 歷史最佳對沖門檻：{r.hedge_threshold:.0%}
 - 左尾報酬門檻：{r.tail_threshold:.2%}
 - 訓練樣本／尾部樣本：{r.training_rows}／{r.positive_rows}
 
@@ -28,15 +32,32 @@ def render_report(r: ForecastResult, c: Config) -> str:
 | Brier score | {m['brier']:.3f} |
 | 尾部事件基準率 | {m['base_rate']:.1%} |
 
+## 對沖決策回測
+
+假設每次對沖成本為部位的 {c.weekly_hedge_cost:.1%}，可抵銷當週下跌損失的 {c.hedge_effectiveness:.0%}，
+且對沖週數不超過歷史樣本的 {c.max_hedge_rate:.0%}。
+
+| 指標 | 數值 |
+|---|---:|
+| 歷史對沖週數 | {h['hedge_weeks']:.0f} |
+| 對沖觸發率 | {h['hedge_rate']:.1%} |
+| 尾部事件捕捉率 | {h['tail_capture_rate']:.1%} |
+| 毛損失減少 | {h['gross_loss_avoided']:.2%} |
+| 累計對沖成本 | {h['total_hedge_cost']:.2%} |
+| 回測淨效益 | {h['net_benefit']:.2%} |
+| 每次對沖平均淨效益 | {h['average_net_per_hedge']:.2%} |
+
 僅供研究與教育用途，不構成投資建議。
 """
 
 
 def render_email_html(r: ForecastResult, c: Config) -> str:
     status = "高風險警示" if r.signal else "未觸發警示"
+    hedge = "建議對沖" if r.hedge_recommended else "暫不對沖"
     status_color = "#b42318" if r.signal else "#067647"
     status_bg = "#fef3f2" if r.signal else "#ecfdf3"
     m = r.metrics
+    h = r.hedge_stats
     rows = [
         ("PR-AUC", m["pr_auc"], "越高越好"),
         ("ROC-AUC", m["roc_auc"], "越高越好"),
@@ -66,6 +87,13 @@ def render_email_html(r: ForecastResult, c: Config) -> str:
         <div style="font-size:14px;color:#d0d5dd">資料截止日：{r.as_of}</div>
       </div>
       <div style="padding:24px 28px">
+        <div style="margin-bottom:18px;padding:18px;border-radius:12px;background:#eef4ff;border:1px solid #b2ccff">
+          <div style="font-size:13px;color:#3538cd;font-weight:700">量化對沖決策</div>
+          <div style="margin-top:4px;font-size:28px;font-weight:800;color:#1d2939">{hedge}</div>
+          <div style="margin-top:6px;font-size:13px;color:#475467">
+            目前機率 {r.probability:.1%} · 歷史最佳觸發門檻 {r.hedge_threshold:.0%}
+          </div>
+        </div>
         <div style="padding:18px;border-radius:12px;background:{status_bg};border-left:5px solid {status_color}">
           <div style="font-size:14px;color:{status_color};font-weight:700">{status}</div>
           <div style="margin-top:4px;font-size:38px;line-height:1.1;font-weight:800;color:{status_color}">{r.probability:.1%}</div>
@@ -93,6 +121,14 @@ def render_email_html(r: ForecastResult, c: Config) -> str:
           </tr></thead>
           <tbody>{table_rows}</tbody>
         </table>
+        <h2 style="margin:26px 0 10px;font-size:18px">對沖決策回測</h2>
+        <div style="padding:14px;background:#fffaeb;border-radius:10px;font-size:13px;line-height:1.6;color:#475467">
+          假設每次對沖成本 {c.weekly_hedge_cost:.1%}，抵銷下跌損失 {c.hedge_effectiveness:.0%}，
+          對沖週數上限為歷史樣本的 {c.max_hedge_rate:.0%}。
+          歷史觸發 {h['hedge_weeks']:.0f} 週（{h['hedge_rate']:.1%}），捕捉 {h['tail_capture_rate']:.1%} 尾部事件。
+          毛損失減少 {h['gross_loss_avoided']:.2%}，扣除成本 {h['total_hedge_cost']:.2%} 後，
+          回測淨效益為 <strong>{h['net_benefit']:.2%}</strong>。
+        </div>
         <p style="margin:22px 0 0;font-size:12px;line-height:1.6;color:#667085">
           本報告由統計模型自動產生，僅供研究與教育用途，不構成投資建議。
         </p>
