@@ -17,11 +17,14 @@ from .features import FEATURE_COLUMNS
 class ForecastResult:
     probability: float
     signal: bool
+    hedge_recommended: bool
+    hedge_threshold: float
     tail_threshold: float
     as_of: str
     training_rows: int
     positive_rows: int
     metrics: dict[str, float]
+    hedge_stats: dict[str, float]
 
 
 def make_model(config):
@@ -57,8 +60,47 @@ def train_and_forecast(frame: pd.DataFrame, config: Config) -> ForecastResult:
         "brier": float(brier_score_loss(y, p)),
         "base_rate": float(y.mean()),
     }
+    realized = labelled.loc[valid, "forward_return_1w"].to_numpy()
+    candidates = np.arange(.05, .951, .01)
+    best = None
+    for candidate in candidates:
+        hedge = p >= candidate
+        if hedge.sum() < config.min_hedge_weeks:
+            continue
+        if hedge.mean() > config.max_hedge_rate:
+            continue
+        protection = config.hedge_effectiveness * np.maximum(-realized, 0)
+        net = hedge * (protection - config.weekly_hedge_cost)
+        score = float(net.sum())
+        if best is None or score > best[0]:
+            best = (score, float(candidate), hedge, net)
+    if best is None:
+        best = (0.0, 1.0, np.zeros_like(p, dtype=bool), np.zeros_like(p))
+    total_net, hedge_threshold, historical_hedge, hedge_net = best
+    tail_events = y.to_numpy().astype(bool)
+    hedge_stats = {
+        "hedge_weeks": float(historical_hedge.sum()),
+        "hedge_rate": float(historical_hedge.mean()),
+        "tail_capture_rate": float((historical_hedge & tail_events).sum() / max(tail_events.sum(), 1)),
+        "gross_loss_avoided": float(
+            (historical_hedge * config.hedge_effectiveness * np.maximum(-realized, 0)).sum()
+        ),
+        "total_hedge_cost": float(historical_hedge.sum() * config.weekly_hedge_cost),
+        "net_benefit": total_net,
+        "average_net_per_hedge": float(hedge_net[historical_hedge].mean()) if historical_hedge.any() else 0.0,
+    }
     threshold = float(labelled.forward_return_1w.quantile(config.tail_quantile))
     final_y = (labelled.forward_return_1w <= threshold).astype(int)
     probability = float(make_model(config).fit(labelled[FEATURE_COLUMNS], final_y).predict_proba(latest[FEATURE_COLUMNS])[0, 1])
-    return ForecastResult(probability, probability >= config.probability_threshold, threshold,
-                          latest.index[-1].date().isoformat(), len(labelled), int(final_y.sum()), metrics)
+    return ForecastResult(
+        probability=probability,
+        signal=probability >= config.probability_threshold,
+        hedge_recommended=probability >= hedge_threshold and total_net > 0,
+        hedge_threshold=hedge_threshold,
+        tail_threshold=threshold,
+        as_of=latest.index[-1].date().isoformat(),
+        training_rows=len(labelled),
+        positive_rows=int(final_y.sum()),
+        metrics=metrics,
+        hedge_stats=hedge_stats,
+    )

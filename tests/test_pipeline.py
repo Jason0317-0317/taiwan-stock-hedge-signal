@@ -28,6 +28,8 @@ def test_training_probability_is_bounded():
     result = train_and_forecast(frame, Config())
     assert 0 <= result.probability <= 1
     assert result.training_rows == rows - 1
+    assert .05 <= result.hedge_threshold <= 1
+    assert "net_benefit" in result.hedge_stats
 
 
 def test_download_excludes_incomplete_future_week(monkeypatch):
@@ -51,4 +53,6 @@ def test_html_email_contains_scores():
     assert "<html" in html
     assert "PR-AUC" in html
     assert "Brier score" in html
+    assert "量化對沖決策" in html
+    assert "回測淨效益" in html
     assert f"{result.probability:.1%}" in html
