@@ -45,6 +45,26 @@ def test_download_excludes_incomplete_future_week(monkeypatch):
     assert weekly.index.max() <= index.max()
 
 
+def test_download_retries_incomplete_market_data(monkeypatch):
+    index = pd.date_range("2026-07-01", periods=280, freq="B")
+    incomplete = pd.DataFrame()
+    columns = pd.MultiIndex.from_product([["Adj Close", "Volume"], ["2330.TW", "^TWII"]])
+    complete = pd.DataFrame(100.0, index=index, columns=columns)
+    responses = iter([incomplete, complete])
+    calls = []
+
+    def fake_download(*args, **kwargs):
+        calls.append(kwargs)
+        return next(responses)
+
+    monkeypatch.setattr("tailrisk.data.yf.download", fake_download)
+    monkeypatch.setattr("tailrisk.data.sleep", lambda _: None)
+    weekly = download_market_data(Config(min_training_weeks=-1))
+    assert not weekly.empty
+    assert len(calls) == 2
+    assert calls[0]["threads"] is False
+
+
 def test_html_email_contains_scores():
     rng, rows = np.random.default_rng(7), 420
     frame = pd.DataFrame(rng.normal(0, .02, (rows, len(FEATURE_COLUMNS))),
