@@ -1,154 +1,46 @@
-# XGBoost 台股尾部風險對沖分析
+# TSMC Tail-Risk Forecast
 
-這是一個以 XGBoost 建立的台股尾部風險分析與對沖訊號專案。專案會下載台股與台灣加權指數資料，轉成週資料後建立技術特徵，訓練模型辨識下跌風險，並產生對沖訊號。
+以過去 20 年週資料預測台積電（`2330.TW`）下一週是否進入左尾風險區。模型使用相對變動特徵、時間序列 walk-forward 驗證，以及 `class_weight="balanced"` 處理罕見事件。
 
-## 功能
+> 本專案僅供研究與教育用途，不構成投資建議。
 
-- 下載個股與大盤歷史資料
-- 以週頻率建立特徵，例如波動率、均線乖離、動能、成交量變化與近期低點距離
-- 使用 XGBoost 分類模型預測尾部下跌風險
-- Streamlit 互動介面顯示模型指標與回測績效
-- Node.js 網站儀表板顯示每週風險訊號
-- 網站儀表板提供風險機率排行、訊號分布、風險/報酬散點圖與近 6 週風險趨勢圖
-- 網站儀表板支援手機版瀏覽，手機上會改用單欄卡片、精簡圖表與卡片式摘要表
-- GitHub Pages 可部署手機也能開啟的公開網址
-- 每週自動產生多檔股票風險訊號並寄出 email 報告
-- Email 報告與網站儀表板都會顯示每支股票的「尾部跌幅門檻」，也就是該股票週報酬跌超過多少會被模型視為尾部風險事件
-- 本週風險預測與上週已完成資料會以不同區塊呈現，避免把預測和已實現報酬誤認為同一週
-- 顯示時間順序測試集的 Accuracy、Precision、Recall 與 F1 Score
-- 依每檔股票的訓練資料自動校準少數類別權重，避免固定權重忽略尾部事件
-- 新模型加入選擇權風險、外資期貨、融資融券、法人流向、匯率與國際市場特徵，並以 point-in-time 快照避免偷看未來
-- 新模型採 expanding walk-forward 影子評估；以 PR-AUC、Recall、誤報率及扣除對沖成本後最大回撤共同把關
-- 舊 XGBoost 模型持續在線，挑戰模型只有在經濟效益與風險門檻全部通過後才會升級
+## 方法
 
-## 主要檔案
+- **標籤**：下一週報酬低於訓練資料的第 5 百分位。
+- **特徵**：台積電與台灣加權指數的週報酬、動能、滾動波動率、成交量變化、相對強弱和回撤。
+- **防止洩漏**：特徵只使用預測當下已知資料；驗證採 `TimeSeriesSplit`，每折的尾部門檻只由該折訓練期估計。
+- **模型**：具標準化與類別權重的 Logistic Regression。
+- **評估**：PR-AUC、ROC-AUC、precision、recall、F2、Brier score。
 
-```text
-taiwan-stock-hedge-signal/
-├── app.py                         # Streamlit 互動分析介面
-├── hedge_signal.py                # 每週風險訊號、email 報告與網站資料輸出腳本
-├── package.json                   # Node.js 本機網站依賴與啟動指令
-├── server.js                      # Express 本機網站伺服器
-├── public/
-│   ├── index.html                 # 網站頁面與圖表區塊
-│   ├── styles.css                 # 網站樣式、手機版與響應式圖表排版
-│   ├── app.js                     # 網站資料渲染與 Chart.js 圖表邏輯
-│   ├── report-data.json           # 週報資料，由 hedge_signal.py 更新
-│   └── .nojekyll                  # GitHub Pages 靜態檔設定
-├── requirements.txt               # Python 依賴
-└── .github/workflows/
-    ├── weekly_signal.yml          # 每週產生訊號與更新資料
-    └── deploy_gh_pages_branch.yml # 部署 public/ 到 gh-pages 分支
-```
+20 年週資料約僅 1,000 筆，5% 左尾事件通常只有約 50 筆。因此採低複雜度、可解釋的基準模型，不把 accuracy 當主要指標。
 
-## Email 週報監控股票
-
-`hedge_signal.py` 目前預設寄信監控以下 13 檔台股：
-
-- 2330.TW 台積電
-- 2454.TW 聯發科
-- 2317.TW 鴻海
-- 3711.TW 日月光
-- 2303.TW 聯電
-- 2308.TW 台達電
-- 2383.TW 台光電
-- 2327.TW 國巨
-- 1303.TW 南亞
-- 2881.TW 富邦金
-- 3037.TW 欣興
-- 2409.TW 友達
-- 3481.TW 群創
-
-> 備註：國巨的 yfinance 台股代號使用 `2327.TW`。
-
-## 報告欄位說明
-
-- 風險機率：XGBoost 使用上週結束時可取得的特徵，預測本週落入尾部下跌風險的機率。
-- 上週已實現報酬：已結束交易週的實際報酬，只作為已知資訊呈現，不是本週預測結果。
-- 機率門檻：模型將風險機率最高的前 10% 視為對沖訊號。
-- 尾部跌幅門檻：訓練期間每檔股票「最差 10% 週報酬」的分界。例如顯示「跌超過 5.3%」，代表該股票單週跌幅超過約 5.3% 會被模型視為尾部風險事件。
-- 建議行動：風險機率高於機率門檻時顯示「建議對沖」，否則為「正常持有」。
-- 模型準確度：以時間順序保留最後 20% 的歷史週資料作測試集，顯示 Accuracy、Precision、Recall 與 F1；尾部事件較少，請勿只看 Accuracy。
-- 自動類別權重：在訓練集內再依時間切出驗證區間，從不平衡比例的 0.5～3 倍候選值中，以驗證 F1、Recall、Precision 依序挑選最佳權重；最外層測試集不參與選擇。
-
-## 網站圖表說明
-
-Node.js 儀表板會把 `public/report-data.json` 轉成以下圖表：
-
-- 風險機率排行：比較每檔股票目前風險機率與模型觸發門檻。
-- 訊號分布：統計目前有幾檔建議對沖、幾檔正常持有。
-- 風險與報酬：用散點圖同時觀察上週報酬與風險機率，高風險且負報酬的股票優先檢查。
-- 近 6 週風險趨勢：顯示目前風險較高股票的近期風險機率變化。
-
-上方的「全部 / 建議對沖 / 正常持有」與搜尋框會同步影響圖表、卡片與摘要表。手機版會自動改成單欄卡片、精簡圖表標籤，並將摘要表轉成較容易閱讀的卡片式列。
-
-## 安裝 Python 依賴
+## 本機執行
 
 ```bash
-pip install -r requirements.txt
+python -m venv .venv
+.venv/Scripts/activate
+pip install -r requirements-dev.txt
+python -m tailrisk
+pytest
 ```
 
-## 執行 Streamlit 介面
+產物會寫入 `artifacts/latest_prediction.json` 與 `artifacts/latest_report.md`。
 
-```bash
-streamlit run app.py
-```
+## 每週自動化
 
-## 執行週報腳本
-
-```bash
-python hedge_signal.py
-```
-
-執行後會產生或更新：
-
-- `public/report-data.json`：網站使用的週報資料
-- `report.html`：未設定寄信環境變數時產生的 email 預覽檔
-
-## 執行 Node.js 網站
-
-```bash
-npm install
-npm start
-```
-
-預設會在本機啟動：
-
-```text
-http://localhost:3000
-```
-
-網站會透過 `/api/report` 讀取 `public/report-data.json`；部署到 GitHub Pages 時，會自動改讀靜態的 `report-data.json`。
-
-## 部署到 GitHub Pages
-
-`.github/workflows/deploy_gh_pages_branch.yml` 會在 `public/` 有更新時，把儀表板發布到 `gh-pages` 分支，並將 GitHub Pages source 指向 `gh-pages` branch。
-
-目前公開網址：
-
-```text
-https://jason0317-0317.github.io/taiwan-stock-hedge-signal/
-```
-
-如果 GitHub 第一次啟用 Pages，請到 repo 的 Settings → Pages 確認 Source 使用 `gh-pages` branch。
-
-## GitHub Actions 自動週報
-
-`.github/workflows/weekly_signal.yml` 會在台灣時間每週日 08:00 執行，也可以手動觸發。流程會：
-
-- 產生 13 檔股票風險訊號
-- 寄出 Email 週報
-- 更新 `public/report-data.json`
-- 將最新網站資料提交回 repo
-
-需要設定以下 GitHub Secrets：
+GitHub Actions 於每週六台北時間 09:00 執行，也支援手動觸發。郵件正文包含當週預測與完整模型評分表。設定以下 Repository Secrets 後會透過 Gmail SMTP 寄出報告：
 
 - `SENDER_EMAIL`
-- `SENDER_PASSWORD`
+- `SENDER_PASSWORD`（Gmail App Password）
 - `RECEIVER_EMAIL`
 
-## 注意事項
+未設定郵件 Secrets 時，預測仍會執行並保存 workflow artifact。
 
-- 模型結果僅供研究與風險控管參考，不構成投資建議。
-- yfinance 資料可能受網路、資料源或 ticker 格式影響。
-- 對沖成本、滑價與 carry rate 目前寫在程式常數中，可依實際交易條件調整。
+## 結構
+
+```text
+tailrisk/        核心資料、特徵、模型、報告與郵件模組
+tests/           無網路單元測試
+.github/         每週自動化
+artifacts/       執行產物（不提交）
+```

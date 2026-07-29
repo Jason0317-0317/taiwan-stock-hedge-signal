@@ -1,3 +1,7 @@
 .venv/
 __pycache__/
-report.html
+.pytest_cache/
+*.py[cod]
+.env
+artifacts/*
+!artifacts/.gitkeep

@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tsmc-tail-risk"
+version = "1.0.0"
+description = "Leakage-aware weekly tail-risk forecast for TSMC"
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.26,<3",
+  "pandas>=2.1,<3",
+  "scikit-learn>=1.4,<2",
+  "yfinance>=0.2.54,<2",
+]
+
+[tool.setuptools]
+packages = ["tailrisk"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
