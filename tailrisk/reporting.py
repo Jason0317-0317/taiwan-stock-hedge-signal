@@ -1,9 +1,16 @@
 import json
 from dataclasses import asdict
+from datetime import date, timedelta
 from pathlib import Path
 
 from .config import Config
 from .model import ForecastResult
+
+
+def _week_range(friday: str) -> str:
+    week_end = date.fromisoformat(friday)
+    week_start = week_end - timedelta(days=4)
+    return f"{week_start.isoformat()} ～ {week_end.isoformat()}"
 
 
 def render_report(r: ForecastResult, c: Config) -> str:
@@ -12,7 +19,7 @@ def render_report(r: ForecastResult, c: Config) -> str:
     m = r.metrics
     h = r.hedge_stats
     recent_rows = "\n".join(
-        f"| {row['as_of']} | {row['probability']:.1%} | "
+        f"| {row['week_start']} ～ {row['week_end']} | {row['probability']:.1%} | "
         f"{'對沖' if row['hedge_recommended'] else '不對沖'} | "
         f"{row['actual_return']:.2%} | {'是' if row['actual_tail'] else '否'} | "
         f"{row['hedge_net_result']:.2%} | {row['outcome']} |"
@@ -20,7 +27,7 @@ def render_report(r: ForecastResult, c: Config) -> str:
     )
     return f"""# 台積電下一週尾部風險預測
 
-- 資料截止日：{r.as_of}
+- 資料週期：{_week_range(r.as_of)}
 - 狀態：**{status}**
 - 對沖決策：**{hedge}**
 - 尾部事件機率：**{r.probability:.1%}**
@@ -92,7 +99,7 @@ def render_email_html(r: ForecastResult, c: Config) -> str:
     )
     history_rows = "".join(
         f"""<tr>
-          <td style="padding:9px 7px;border-bottom:1px solid #eaecf0">{row['as_of'][5:]}</td>
+          <td style="padding:9px 7px;border-bottom:1px solid #eaecf0;white-space:nowrap">{row['week_start'][5:]} ～ {row['week_end'][5:]}</td>
           <td style="padding:9px 7px;border-bottom:1px solid #eaecf0;text-align:right">{row['probability']:.1%}</td>
           <td style="padding:9px 7px;border-bottom:1px solid #eaecf0;font-weight:700">{'對沖' if row['hedge_recommended'] else '不對沖'}</td>
           <td style="padding:9px 7px;border-bottom:1px solid #eaecf0;text-align:right;color:{'#b42318' if row['actual_return'] < 0 else '#067647'}">{row['actual_return']:.2%}</td>
@@ -110,7 +117,7 @@ def render_email_html(r: ForecastResult, c: Config) -> str:
       <div style="padding:28px 28px 20px;background:#101828;color:#ffffff">
         <div style="font-size:13px;letter-spacing:1px;color:#98a2b3">TSMC · 2330.TW</div>
         <h1 style="margin:8px 0 4px;font-size:25px">下一週尾部風險預測</h1>
-        <div style="font-size:14px;color:#d0d5dd">資料截止日：{r.as_of}</div>
+        <div style="font-size:14px;color:#d0d5dd">資料週期：{_week_range(r.as_of)}</div>
       </div>
       <div style="padding:24px 28px">
         <div style="margin-bottom:18px;padding:18px;border-radius:12px;background:#eef4ff;border:1px solid #b2ccff">
@@ -160,7 +167,7 @@ def render_email_html(r: ForecastResult, c: Config) -> str:
         <div style="overflow-x:auto">
           <table style="width:100%;min-width:560px;border-collapse:collapse;border:1px solid #eaecf0;font-size:12px">
             <thead><tr style="background:#f9fafb">
-              <th style="padding:9px 7px;text-align:left">日期</th>
+              <th style="padding:9px 7px;text-align:left">週一至週五</th>
               <th style="padding:9px 7px;text-align:right">機率</th>
               <th style="padding:9px 7px;text-align:left">建議</th>
               <th style="padding:9px 7px;text-align:right">實際報酬</th>
