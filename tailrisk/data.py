@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from time import sleep
 
 import pandas as pd
 import yfinance as yf
@@ -9,12 +10,24 @@ from .config import Config
 def download_market_data(config: Config) -> pd.DataFrame:
     end = date.today() + timedelta(days=1)
     start = end - timedelta(days=365 * config.years + 30)
-    raw = yf.download(
-        [config.ticker, config.benchmark], start=start.isoformat(), end=end.isoformat(),
-        auto_adjust=False, progress=False, threads=True,
-    )
-    if raw.empty:
-        raise RuntimeError("No market data returned")
+    raw = pd.DataFrame()
+    for attempt in range(3):
+        raw = yf.download(
+            [config.ticker, config.benchmark], start=start.isoformat(), end=end.isoformat(),
+            auto_adjust=False, progress=False, threads=False,
+        )
+        if not raw.empty and isinstance(raw.columns, pd.MultiIndex):
+            available = set(raw.columns.get_level_values(1))
+            if {config.ticker, config.benchmark} <= available:
+                break
+        if attempt < 2:
+            sleep(2 ** attempt)
+    if raw.empty or not isinstance(raw.columns, pd.MultiIndex):
+        raise RuntimeError("No complete market data returned after 3 attempts")
+    available = set(raw.columns.get_level_values(1))
+    missing = {config.ticker, config.benchmark} - available
+    if missing:
+        raise RuntimeError(f"Missing market data after 3 attempts: {sorted(missing)}")
     field = "Adj Close" if "Adj Close" in raw.columns.get_level_values(0) else "Close"
     close = raw[field]
     daily = pd.DataFrame({
@@ -22,6 +35,8 @@ def download_market_data(config: Config) -> pd.DataFrame:
         "benchmark_close": close[config.benchmark],
         "volume": raw["Volume"][config.ticker],
     }).dropna(subset=["close", "benchmark_close"])
+    if daily.empty:
+        raise RuntimeError("Market data contains no overlapping TSMC and benchmark observations")
     weekly = pd.DataFrame({
         "close": daily["close"].resample("W-FRI").last(),
         "benchmark_close": daily["benchmark_close"].resample("W-FRI").last(),
